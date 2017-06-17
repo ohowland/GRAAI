@@ -27,6 +27,7 @@ int main() {
 	*/
 
 	/* COMM.o */
+
 	std::tr1::shared_ptr<graComm::ModbusCommunication>
 	comm1( new graComm::ModbusCommunication() );
 

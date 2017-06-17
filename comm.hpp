@@ -4,7 +4,11 @@
 #include <string>
 #include <modbus.h>
 
+#include "config.hpp"
+
 namespace graComm {
+
+class ModbusConfig;
 
 class CommunicationCore {
 /* Base class for objects handling pysical layer communication */
@@ -35,38 +39,20 @@ public:
 
 	ModbusCommunication& open();
 	void close(); 
-	int read();
+	int read(ModbusConfig&);
 
 protected:
 
 private:
 	modbus_t *ctx_;
-	std::string ipAddress_;
-	int port_;
+	std::string ipAddress_; // Device ip address
+	int port_; 				// Modbus port default 502
+	uint16_t *destination_;  // Destination pointer for recieved modbus data
+	size_t destinationSize_; // Size of destination for garbage collection
 
+	uint16_t& createDestination(const ModbusConfig&);
+	int uncreateDestination();	
 };
-
-/* use templating for dynamically allocating space for
- * the modbus dest data
-
-template <class T>
-void lst<T>::uncreate() {
-	if (data) {
-		for (iterator iter = data; iter != avail; ++iter)
-			alloc.destroy(iter);
-		alloc.deallocate(data, avail - data);
-	}
-
-	data = avail = 0;
-}
-
-template <class T>
-void lst<T>::create(size_type n) {
-	data = alloc.allocate(n);
-	avail = data + n;
-}
-
-*/
 
 }
 
