@@ -17,8 +17,14 @@ int main() {
 
 	std::fstream fs;
 	config1.readConfigFile(fs, "ModbusConfig.txt");
-
+	
 	comm1->open();
-	comm1->read(config1);
+	std::map<std::string, uint16_t> map1;
+	comm1->read(config1, map1);
+
+	for(std::map<std::string, uint16_t>::const_iterator it = map1.begin();
+	    it != map1.end(); it++) {
+		std::cout << it->first << " " << it->second << std::endl;
+	}
 	return 0;
 }

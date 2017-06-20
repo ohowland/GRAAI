@@ -1,4 +1,4 @@
-output_kw 1 2 0
-output_kvar 2 2 0
+output_kw 1 0 0
+output_kvar 2 0 0
 status_word 3 0 0
 control_word 4 0 2

@@ -39,7 +39,7 @@ public:
 
 	ModbusCommunication& open();
 	void close(); 
-	int read(ModbusConfig&);
+	int read(const ModbusConfig&, std::map<std::string, uint16_t>&);
 
 protected:
 
@@ -48,10 +48,10 @@ private:
 	std::string ipAddress_; // Device ip address
 	int port_; 				// Modbus port default 502
 	uint16_t *destination_;  // Destination pointer for recieved modbus data
-	size_t destinationSize_; // Size of destination for garbage collection
 
-	uint16_t& createDestination(const ModbusConfig&);
-	int uncreateDestination();	
+	ModbusCommunication& createDestination(const ModbusConfig&);
+	ModbusCommunication& uncreateDestination();	
+	std::map<std::string, uint16_t> mapReturnedData(const ModbusConfig&);
 };
 
 }

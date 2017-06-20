@@ -11,6 +11,20 @@
 
 namespace graComm {
 
+ModbusConfig::ModbusConfig()
+  : size_(0)
+{
+	std::cout << "MODBUS_CONFIG: Constructor" << std::endl;
+}
+
+/* ModbusConfig& ModbusConfig::operator=(const ModbusConfig& rhs)
+{
+	if(&rhs != this)
+		;
+	return *this;	
+}
+*/
+
 /**
 	Read configuration data into the vector<ModbusData>
 	from a istream. Data should be entered as:
@@ -21,7 +35,7 @@ namespace graComm {
  */
 std::istream& ModbusConfig::readConfigStream(std::istream& is)
 {
-	data.clear();
+	data_.clear();
 	int dtype; // for conversion to dataType
 	int atype; // for conversion to accessType
 	modbusData incomingConfigData;
@@ -36,9 +50,10 @@ std::istream& ModbusConfig::readConfigStream(std::istream& is)
 		incomingConfigData.accessType =
 		static_cast<requestAccessType>(atype);
 
-		data.push_back(incomingConfigData);
+		data_.push_back(incomingConfigData);
 	}
 	
+	size_ = nRegisters();
 	return is;
 }
 
@@ -55,7 +70,7 @@ std::fstream& ModbusConfig::readConfigFile(std::fstream& fs,
 										   const std::string& filepath)
 {
 	fs.open(filepath.c_str());
-	data.clear();
+	data_.clear();
 	int dtype; // for conversion to dataType
 	int atype; // for conversion to accessType
 	modbusData incomingConfigData;
@@ -70,10 +85,12 @@ std::fstream& ModbusConfig::readConfigFile(std::fstream& fs,
 		incomingConfigData.accessType =
 		static_cast<requestAccessType>(atype);
 		
-		data.push_back(incomingConfigData);
+		data_.push_back(incomingConfigData);
 	}
 	fs.close(); // how to write as exception safe?
 				// try statement around while loop?
+	
+	size_ = nRegisters();
 	return fs;
 }
 
@@ -81,7 +98,7 @@ std::fstream& ModbusConfig::readConfigFile(std::fstream& fs,
 	Displays the Modbus configuration values held
    	in the ModbusConfiguration vector<ModbusData>.
  */ 
-void ModbusConfig::print()
+void ModbusConfig::print() const
 {
 	std::cout << "----------------------------------" 
 			  << std::endl
@@ -89,8 +106,8 @@ void ModbusConfig::print()
 			  << std::endl
 		      << "NAME | Address | Datatype | Access" << std::endl;	
 	
-	for (std::vector<modbusData>::const_iterator it = data.begin();
-	     it < data.end(); it++)
+	for (std::vector<modbusData>::const_iterator it = data_.begin();
+	     it < data_.end(); it++)
    	{
 		std::cout << it->name << " "
 				  << it->registerAddr << " ";
@@ -132,4 +149,37 @@ void ModbusConfig::print()
 	}
 	std::cout << "----------------------------------"
 			  << std::endl;
-}}
+}
+
+size_t ModbusConfig::nRegisters() const
+{
+	size_t nRegisters = 0;
+	for (std::vector<modbusData>::const_iterator it = data_.begin(); 
+		 it <= data_.end(); it++)
+	{
+		switch(it->dataType) {
+		case U16:
+			nRegisters += (sizeof(uint16_t)/2);
+			std::cout << "FOUND: U16, destinationSize: " << nRegisters;
+			break;
+		case U32:
+			nRegisters += (sizeof(uint32_t)/2);
+			std::cout << "FOUND: U32, destinationSize: " << nRegisters;
+			break;
+		case FLOAT:
+			nRegisters += (sizeof(float)/2);
+			std::cout << "FOUND: float, destinationSize: " << nRegisters;
+			break;
+		case DOUBLE:
+			nRegisters += (sizeof(double)/2);
+			std::cout << "FOUND: double, destinationSize: " << nRegisters;
+			break;
+		default:
+			std::cout << "WARNING! FOUND: undefined type. behavior undefined!";
+			break;
+		}
+		std::cout << std::endl;
+	}
+	return nRegisters;
+}
+}
