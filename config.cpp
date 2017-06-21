@@ -17,14 +17,6 @@ ModbusConfig::ModbusConfig()
 	std::cout << "MODBUS_CONFIG: Constructor" << std::endl;
 }
 
-/* ModbusConfig& ModbusConfig::operator=(const ModbusConfig& rhs)
-{
-	if(&rhs != this)
-		;
-	return *this;	
-}
-*/
-
 /**
 	Read configuration data into the vector<ModbusData>
 	from a istream. Data should be entered as:
@@ -74,6 +66,10 @@ std::fstream& ModbusConfig::readConfigFile(std::fstream& fs,
 	int dtype; // for conversion to dataType
 	int atype; // for conversion to accessType
 	modbusData incomingConfigData;
+	/* TODO: there is a real boner of a bug here.
+	 * the while loop runs once more than it should even though it should
+	 * be hitting an EOF.
+	*/
 	while (fs >> incomingConfigData.name
 			  >> incomingConfigData.registerAddr
 			  >> dtype 

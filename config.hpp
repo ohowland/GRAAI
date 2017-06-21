@@ -66,7 +66,7 @@ struct modbusData {
 
 private:
 	std::vector<modbusData> data_; // container for modbus configuration data
-	size_t size_;		 			   // number of uint16_t's
+	size_t size_;	 			   // number of uint16_t's
 	
 	size_t nRegisters() const; // initalizes size_	
 };

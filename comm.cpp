@@ -90,8 +90,7 @@ int ModbusCommunication::read(const ModbusConfig& pkg,
 				  << " registers to " << destination_ << std::endl;
 		
 		rc = modbus_read_registers(ctx_, pkg[0].registerAddr, pkg.size(), destination_);
-	}
-	
+	}	
 	if (rc == -1) {
 		std::cout << "Read failed: " << modbus_strerror(errno)
 				  << std::endl;
@@ -99,7 +98,7 @@ int ModbusCommunication::read(const ModbusConfig& pkg,
 	}
 
 	rMap = mapReturnedData(pkg);
-
+	uncreateDestination();
 	return rc;
 }
 
