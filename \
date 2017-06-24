@@ -1,0 +1,11 @@
+/* test server to deliver a sequence of numbers at given registers
+*/
+
+#include "modbus.h"
+#include <iostream>
+#include <string>
+#include <cctype>
+
+int main()
+{
+	

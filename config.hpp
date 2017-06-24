@@ -14,40 +14,53 @@
 
 #include <string>
 #include <vector>
+#include <tr1/memory>
 #include <map>
-#include <iostream>
 #include <fstream>
-#include <cctype>
 #include <stdint.h> 
 
 namespace graComm {
 
-class ModbusConfig {
-public:
-
 enum requestDataType { U16, U32, FLOAT, DOUBLE };
 enum requestAccessType { R, W, RW };
 
-struct modbusData {
-	std::string name;
-	uint16_t registerAddr;
-	requestDataType dataType;
-	requestAccessType accessType;
+class ModbusTag {
+public:
+	ModbusTag();
+	ModbusTag(std::istream& is); 
+	
+	// ModbusTag(ModbusTag&);
+	// ModbusTag& operator=(const ModbusTag&);
+
+	~ModbusTag() { }
+
+	std::string name() const { return name_; }
+	uint16_t address() const { return address_; }
+	requestDataType datatype() const { return datatype_; }
+	requestAccessType access() const { return access_; }
+
+
+private:
+	std::string name_;
+	uint16_t address_;
+	requestDataType datatype_;
+	requestAccessType access_;
 };
 
+class ModbusConfig {
+public:
 	// pass through the underlying data structure iterator?
-	typedef std::vector<modbusData>::iterator iterator;
-	typedef std::vector<modbusData>::const_iterator const_iterator;
-	typedef std::vector<modbusData>::reference reference;
-	typedef std::vector<modbusData>::const_reference const_reference;
-	
-	typedef std::vector<modbusData>::value_type value_type;
+	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::iterator iterator;
+	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::const_iterator const_iterator;
+	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::reference reference;
+	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::const_reference const_reference;
+	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::value_type value_type;
 
 	ModbusConfig();
 	ModbusConfig(std::istream& is) { readConfigStream(is); }
 
 	// ModbusConfig(const ModbusConfig&);
-	//ModbusConfig& operator=(const ModbusConfig&); 
+	// ModbusConfig& operator=(const ModbusConfig&); 
 	
 	~ModbusConfig() { }
 	
@@ -56,20 +69,23 @@ struct modbusData {
 	void print() const;
 	size_t size() const { return size_; }
 
-	value_type operator[](size_t i) { return data_[i]; }
-	const value_type operator[](size_t i) const { return data_[i]; }
+	value_type operator[](size_t i) { return tags_[i]; }
+	const value_type operator[](size_t i) const { return tags_[i]; }
 
-	iterator begin() { return data_.begin(); }
-	const_iterator begin() const { return data_.begin(); }
-	iterator end() { return data_.end(); }
-	const_iterator end() const { return data_.end(); }
+	iterator begin() { return tags_.begin(); }
+	const_iterator begin() const { return tags_.begin(); }
+	iterator end() { return tags_.end(); }
+	const_iterator end() const { return tags_.end(); }
 
 private:
-	std::vector<modbusData> data_; // container for modbus configuration data
-	size_t size_;	 			   // number of uint16_t's
+	// container for modbus configuration data
+	std::vector< std::tr1::shared_ptr<ModbusTag> > tags_;
+	size_t size_;                 // number of uint16_t's
 	
-	size_t nRegisters() const; // initalizes size_	
+	size_t nRegisters() const;    // initalizes size_	
 };
+	
+bool compareAddress(const ModbusTag&, const ModbusTag&);
 
 }
 

@@ -8,13 +8,48 @@
  */
 
 #include "config.hpp"
+#include <iostream>
+#include <algorithm> 
 
 namespace graComm {
 
-ModbusConfig::ModbusConfig()
-  : size_(0)
+bool compareAddress(const ModbusTag& lhs, const ModbusTag& rhs)
 {
-	std::cout << "MODBUS_CONFIG: Constructor" << std::endl;
+	return lhs.address() < rhs.address();
+}
+
+/* ***ModbusTag implementation*** */
+ModbusTag::ModbusTag()
+ : name_(),
+   address_(0),
+   datatype_(U16),
+   access_(R)
+{
+	std::cout << "ModbusTag: Constructor" << std::endl;
+}
+
+ModbusTag::ModbusTag(std::istream& is)
+ : name_(),
+   address_(0),
+   datatype_(U16),
+   access_(R)
+{
+	std::cout << "ModbusTag: Constructor(istream&)" << std::endl;
+	int dtype; // for conversion to datatype
+	int atype; // for conversion to access
+
+	is >> name_ >> address_ >> dtype >> atype;
+
+	datatype_ = static_cast<requestDataType>(dtype);
+	access_ = static_cast<requestAccessType>(atype);
+}
+
+
+/* ***ModbusConfig Implementation*** */
+ModbusConfig::ModbusConfig()
+  : size_(0) // TODO initalize all parameters
+{
+	std::cout << "ModbusConfig: Constructor" << std::endl;
 }
 
 /**
@@ -27,22 +62,13 @@ ModbusConfig::ModbusConfig()
  */
 std::istream& ModbusConfig::readConfigStream(std::istream& is)
 {
-	data_.clear();
-	int dtype; // for conversion to dataType
-	int atype; // for conversion to accessType
-	modbusData incomingConfigData;
-	while (is >> incomingConfigData.name
-			  >> incomingConfigData.registerAddr
-			  >> dtype
-			  >> atype) 
-	{	
-		incomingConfigData.dataType = 
-		static_cast<requestDataType>(dtype);
-		
-		incomingConfigData.accessType =
-		static_cast<requestAccessType>(atype);
-
-		data_.push_back(incomingConfigData);
+	std::cout << "ModbusConfig: Constructor(istream&)" << std::endl;
+	
+	tags_.clear();
+	char c;
+	while (is >> c) {
+		is.putback(c);
+		tags_.push_back(ModbusTag(is));
 	}
 	
 	size_ = nRegisters();
@@ -62,26 +88,12 @@ std::fstream& ModbusConfig::readConfigFile(std::fstream& fs,
 										   const std::string& filepath)
 {
 	fs.open(filepath.c_str());
-	data_.clear();
-	int dtype; // for conversion to dataType
-	int atype; // for conversion to accessType
-	modbusData incomingConfigData;
-	/* TODO: there is a real boner of a bug here.
-	 * the while loop runs once more than it should even though it should
-	 * be hitting an EOF.
-	*/
-	while (fs >> incomingConfigData.name
-			  >> incomingConfigData.registerAddr
-			  >> dtype 
-			  >> atype) 
-	{		
-		incomingConfigData.dataType = 
-		static_cast<requestDataType>(dtype);
-		
-		incomingConfigData.accessType =
-		static_cast<requestAccessType>(atype);
-		
-		data_.push_back(incomingConfigData);
+	tags_.clear();
+
+	char c;	
+	while (fs >> c) {
+		fs.putback(c);
+		tags_.push_back(ModbusTag(fs));
 	}
 	fs.close(); // how to write as exception safe?
 				// try statement around while loop?
@@ -101,14 +113,16 @@ void ModbusConfig::print() const
 			  << "MODBUS CONFIGURATION FILE:"
 			  << std::endl
 		      << "NAME | Address | Datatype | Access" << std::endl;	
-	
-	for (std::vector<modbusData>::const_iterator it = data_.begin();
-	     it < data_.end(); it++)
-   	{
-		std::cout << it->name << " "
-				  << it->registerAddr << " ";
 
-		switch(it->dataType) {
+	// std::sort(tags_.begin(), tags_.end(), compareAddress);
+
+	for (std::vector< std::tr1::shared_ptr<ModbusTag> >::const_iterator it = tags_.begin();
+	     it < tags_.end(); it++)
+   	{
+		std::cout << it->name() << " "
+				  << it->address() << " ";
+
+		switch(it->datatype()) {
 		case U16:
 			std::cout << "U16 ";
 			break;
@@ -126,7 +140,7 @@ void ModbusConfig::print() const
 			break;
 		}
 
-		switch(it->accessType) {
+		switch(it->access()) {
 		case R:
 			std::cout << "READ";
 			break;
@@ -150,10 +164,10 @@ void ModbusConfig::print() const
 size_t ModbusConfig::nRegisters() const
 {
 	size_t nRegisters = 0;
-	for (std::vector<modbusData>::const_iterator it = data_.begin(); 
-		 it <= data_.end(); it++)
+	for (std::vector< std::tr1::shared_ptr<ModbusTag> >::const_iterator it = tags_.begin(); 
+		 it != tags_.end(); it++)
 	{
-		switch(it->dataType) {
+		switch(it->datatype()) {
 		case U16:
 			nRegisters += (sizeof(uint16_t)/2);
 			std::cout << "FOUND: U16, destinationSize: " << nRegisters;

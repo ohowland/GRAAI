@@ -76,9 +76,7 @@ void ModbusCommunication::close() {
 		2. how to ensure the allocated space in destination_ is freed?
 		3. how to link the modbus register tag 'name' to a parameter in
 		   the model object?
-
 */
-
 int ModbusCommunication::read(const ModbusConfig& pkg,
 							  std::map<std::string, uint16_t>& rMap) 
 {
@@ -107,8 +105,7 @@ int ModbusCommunication::read(const ModbusConfig& pkg,
     object. Create that space and return a pointer to it.
 
 	@params ModbusConfig object with data for modbus call.
-	@return pointer to start of destination space to be used in libmodbus
-		    read_tcp call.	
+	@return ref to ModbusCommunication object.
 */
 ModbusCommunication&
 ModbusCommunication::createDestination(const ModbusConfig& pkg)
@@ -121,7 +118,10 @@ ModbusCommunication::createDestination(const ModbusConfig& pkg)
 
 	return *this;
 }
-	
+
+/**
+	Destroy the space allocated in destination_
+*/ 
 ModbusCommunication&
 ModbusCommunication::uncreateDestination()
 {
@@ -131,6 +131,10 @@ ModbusCommunication::uncreateDestination()
 	return *this;
 }	
 
+/**
+	@params ModbusConfig
+	@return <name, value> map of modbus data.
+*/
 std::map<std::string, uint16_t>
 ModbusCommunication::mapReturnedData(const ModbusConfig& pkg)
 {
