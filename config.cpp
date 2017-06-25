@@ -13,7 +13,8 @@
 
 namespace graComm {
 
-bool compareAddress(const ModbusTag& lhs, const ModbusTag& rhs)
+bool sortByAddress(const ModbusTag& lhs,
+	               const ModbusTag& rhs)
 {
 	return lhs.address() < rhs.address();
 }
@@ -44,6 +45,7 @@ ModbusTag::ModbusTag(std::istream& is)
 	access_ = static_cast<requestAccessType>(atype);
 }
 
+ModbusTag::operator=(ModbusTag&) { }
 
 /* ***ModbusConfig Implementation*** */
 ModbusConfig::ModbusConfig()
@@ -114,9 +116,9 @@ void ModbusConfig::print() const
 			  << std::endl
 		      << "NAME | Address | Datatype | Access" << std::endl;	
 
-	// std::sort(tags_.begin(), tags_.end(), compareAddress);
+	std::sort(tags_.begin(), tags_.end(), sortByAddress);
 
-	for (std::vector< std::tr1::shared_ptr<ModbusTag> >::const_iterator it = tags_.begin();
+	for (std::vector<ModbusTag>::const_iterator it = tags_.begin();
 	     it < tags_.end(); it++)
    	{
 		std::cout << it->name() << " "
@@ -164,7 +166,7 @@ void ModbusConfig::print() const
 size_t ModbusConfig::nRegisters() const
 {
 	size_t nRegisters = 0;
-	for (std::vector< std::tr1::shared_ptr<ModbusTag> >::const_iterator it = tags_.begin(); 
+	for (std::vector<ModbusTag>::const_iterator it = tags_.begin(); 
 		 it != tags_.end(); it++)
 	{
 		switch(it->datatype()) {

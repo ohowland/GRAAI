@@ -29,16 +29,12 @@ public:
 	ModbusTag();
 	ModbusTag(std::istream& is); 
 	
-	// ModbusTag(ModbusTag&);
-	// ModbusTag& operator=(const ModbusTag&);
-
 	~ModbusTag() { }
 
 	std::string name() const { return name_; }
 	uint16_t address() const { return address_; }
 	requestDataType datatype() const { return datatype_; }
 	requestAccessType access() const { return access_; }
-
 
 private:
 	std::string name_;
@@ -50,11 +46,11 @@ private:
 class ModbusConfig {
 public:
 	// pass through the underlying data structure iterator?
-	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::iterator iterator;
-	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::const_iterator const_iterator;
-	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::reference reference;
-	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::const_reference const_reference;
-	typedef std::vector< std::tr1::shared_ptr<ModbusTag> >::value_type value_type;
+	typedef std::vector<ModbusTag>::iterator iterator;
+	typedef std::vector<ModbusTag>::const_iterator const_iterator;
+	typedef std::vector<ModbusTag>::reference reference;
+	typedef std::vector<ModbusTag>::const_reference const_reference;
+	typedef std::vector<ModbusTag>::value_type value_type;
 
 	ModbusConfig();
 	ModbusConfig(std::istream& is) { readConfigStream(is); }
@@ -79,13 +75,14 @@ public:
 
 private:
 	// container for modbus configuration data
-	std::vector< std::tr1::shared_ptr<ModbusTag> > tags_;
+	std::vector<ModbusTag> tags_;
 	size_t size_;                 // number of uint16_t's
 	
 	size_t nRegisters() const;    // initalizes size_	
 };
 	
-bool compareAddress(const ModbusTag&, const ModbusTag&);
+bool sortByAddress(const ModbusTag&,
+				   const ModbusTag&);
 
 }
 
