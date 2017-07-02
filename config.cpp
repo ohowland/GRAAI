@@ -45,11 +45,10 @@ ModbusTag::ModbusTag(std::istream& is)
 	access_ = static_cast<requestAccessType>(atype);
 }
 
-ModbusTag::operator=(ModbusTag&) { }
-
 /* ***ModbusConfig Implementation*** */
 ModbusConfig::ModbusConfig()
-  : size_(0) // TODO initalize all parameters
+    : tags_(),
+	  size_(0)
 {
 	std::cout << "ModbusConfig: Constructor" << std::endl;
 }

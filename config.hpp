@@ -48,8 +48,8 @@ public:
 	// pass through the underlying data structure iterator?
 	typedef std::vector<ModbusTag>::iterator iterator;
 	typedef std::vector<ModbusTag>::const_iterator const_iterator;
-	typedef std::vector<ModbusTag>::reference reference;
-	typedef std::vector<ModbusTag>::const_reference const_reference;
+	//typedef std::vector<ModbusTag>::reference reference;
+	//typedef std::vector<ModbusTag>::const_reference const_reference;
 	typedef std::vector<ModbusTag>::value_type value_type;
 
 	ModbusConfig();
@@ -66,12 +66,12 @@ public:
 	size_t size() const { return size_; }
 
 	value_type operator[](size_t i) { return tags_[i]; }
-	const value_type operator[](size_t i) const { return tags_[i]; }
+	//const value_type operator[](size_t i) const { return tags_[i]; }
 
 	iterator begin() { return tags_.begin(); }
-	const_iterator begin() const { return tags_.begin(); }
+	//const_iterator begin() const { return tags_.begin(); }
 	iterator end() { return tags_.end(); }
-	const_iterator end() const { return tags_.end(); }
+	//const_iterator end() const { return tags_.end(); }
 
 private:
 	// container for modbus configuration data

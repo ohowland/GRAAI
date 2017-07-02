@@ -23,25 +23,24 @@ namespace graComm {
 // CommunicationCore
 CommunicationCore::CommunicationCore()
 : processName_("UNINITIALIZED")
-{ 
-	std::cout << "COMMMUNICATION_CORE: Constructor"
-			 	 << std::endl;
-}
+{ std::cout << "COMMMUNICATION_CORE: Constructor" << std::endl; }
 
 // ModbusCommunication
 ModbusCommunication::ModbusCommunication()
 : ipAddress_("127.0.0.1"),
   port_(1502)
-{
-	std::cout << "MODBUS_COMMUNICATION: Constructor" << std::endl;
-}
+{ std::cout << "MODBUS_COMMUNICATION: Constructor" << std::endl; }
 
 ModbusCommunication& ModbusCommunication::open() {
+
 	/* begin polling modbus slave */
 	std::cout << "MODBUS_COMMUNICATION: Opening connection..." << std::endl
 			  << "IP: " << ipAddress_ << " Port: " << port_
 			  << std::endl;
-		
+	
+	// should this be wrapped in a smart pointer?
+	// need to look at modbus's source code to see if there
+	// is a new/delete	
 	ctx_ = modbus_new_tcp(ipAddress().c_str(), port());
 	if (ctx_ == NULL) {
 		std::cout << "Unable to allocate libmodbus context"
@@ -114,6 +113,7 @@ ModbusCommunication::createDestination(const ModbusConfig& pkg)
 	if (destination_)
 		uncreateDestination();
 
+	// NO NAKED NEW
 	destination_ = new uint16_t[pkg.size()]; // allocate memory in destination_
 
 	return *this;
