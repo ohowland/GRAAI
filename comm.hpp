@@ -4,33 +4,13 @@
 #include <string>
 #include <modbus.h>
 
-#include "config.hpp"
 
 namespace graComm {
 
 class ModbusConfig;
 
-class CommunicationCore {
-/* Base class for objects handling pysical layer communication */
-
-public:
-	CommunicationCore();
-	virtual ~CommunicationCore() { }
-
-	virtual CommunicationCore& open() { return *this; }
-	virtual void close() = 0; 
-
-	std::string processName() const { return processName_; }
-
-protected:
-
-private:
-	std::string processName_; // communication process name
-
-};
-
-class ModbusCommunication: public CommunicationCore {
-/* Child class for modbus communication */
+class ModbusCommunication {
+/* Class for modbus communication */
 
 public:
 	ModbusCommunication();
@@ -39,7 +19,8 @@ public:
 
 	ModbusCommunication& open();
 	void close(); 
-	int read(const ModbusConfig&, std::map<std::string, uint16_t>&);
+	
+	// int read(const ModbusConfig&, std::map<std::string, uint16_t>&);
 
 protected:
 
@@ -51,7 +32,8 @@ private:
 
 	ModbusCommunication& createDestination(const ModbusConfig&);
 	ModbusCommunication& uncreateDestination();	
-	std::map<std::string, uint16_t> mapReturnedData(const ModbusConfig&);
+	
+	// std::map<std::string, uint16_t> mapReturnedData(const ModbusConfig&);
 };
 
 }

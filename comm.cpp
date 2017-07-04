@@ -20,11 +20,6 @@
 
 namespace graComm {
 
-// CommunicationCore
-CommunicationCore::CommunicationCore()
-: processName_("UNINITIALIZED")
-{ std::cout << "COMMMUNICATION_CORE: Constructor" << std::endl; }
-
 // ModbusCommunication
 ModbusCommunication::ModbusCommunication()
 : ipAddress_("127.0.0.1"),
@@ -63,23 +58,11 @@ void ModbusCommunication::close() {
 }
 
 /**
-	Read modbus registers defined in ModbusConfig object.
-	This function currenty uses a single destination pointer held in
-	the ModbusCommunication object. Future development would be to give read()
-	a ModbusConfig, and a second object linking the destination to a data model.
-	
-	This highlights the next step, which is to move the data return to destination_
-	into a model object.
-		
-		1. should the transfer take place in the read command?
-		2. how to ensure the allocated space in destination_ is freed?
-		3. how to link the modbus register tag 'name' to a parameter in
-		   the model object?
 */
 int ModbusCommunication::read(const ModbusConfig& pkg,
 							  std::map<std::string, uint16_t>& rMap) 
 {
-	createDestination(pkg);
+//	createDestination(pkg);
 	
 	int rc = -1; // registers recieved
 	if (destination_) {
@@ -95,41 +78,9 @@ int ModbusCommunication::read(const ModbusConfig& pkg,
 	}
 
 	rMap = mapReturnedData(pkg);
-	uncreateDestination();
+//	uncreateDestination();
 	return rc;
 }
-
-/**
-	Find the total space required to recieve data listed in a ModbusConfig
-    object. Create that space and return a pointer to it.
-
-	@params ModbusConfig object with data for modbus call.
-	@return ref to ModbusCommunication object.
-*/
-ModbusCommunication&
-ModbusCommunication::createDestination(const ModbusConfig& pkg)
-{
-	std::cout << "CALL: createDestination()" << std::endl;
-	if (destination_)
-		uncreateDestination();
-
-	// NO NAKED NEW
-	destination_ = new uint16_t[pkg.size()]; // allocate memory in destination_
-
-	return *this;
-}
-
-/**
-	Destroy the space allocated in destination_
-*/ 
-ModbusCommunication&
-ModbusCommunication::uncreateDestination()
-{
-	
-	std::cout << "CALL: uncreateDestination()" << std::endl;
-	delete[] destination_;
-	return *this;
-}	
 
 /**
 	@params ModbusConfig

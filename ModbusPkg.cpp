@@ -1,13 +1,13 @@
 /**
 	config.cpp
-	Purpose: Implements the ModbusConfig class. Used to translate filestream
-	data into a standard form for use with the ModbusCommunication class.
+	Purpose: Implements the ModbusPkg class. Used to translate filestream
+	data into a standard form for use with the ModbusPkg class.
 
 	@author Owen Edgerton
 	@version 1.0 6/17/17
  */
 
-#include "config.hpp"
+#include "ModbusPkg.hpp"
 #include <iostream>
 #include <algorithm> 
 
@@ -45,35 +45,36 @@ ModbusTag::ModbusTag(std::istream& is)
 	access_ = static_cast<requestAccessType>(atype);
 }
 
-/* ***ModbusConfig Implementation*** */
-ModbusConfig::ModbusConfig()
-    : tags_(),
-	  size_(0)
+/* ***ModbusPkg Implementation*** */
+
+ModbusPkg::ModbusPkg()
+: tags_(),
+  destination_(),
+  size_(0)
 {
-	std::cout << "ModbusConfig: Constructor" << std::endl;
+	std::cout << "ModbusPkg: Constructor" << std::endl;
 }
 
-/**
-	Read configuration data into the vector<ModbusData>
-	from a istream. Data should be entered as:
-	Name, Register Address, Data Type, Access Type.
-
-	@param 'is' reference to istream
-	@return reference to istream.
- */
-std::istream& ModbusConfig::readConfigStream(std::istream& is)
+ModbusPkg::ModbusPkg(std::fstream& fs, 
+				     const std::string& filepath)
+: tags_(),
+  destination_(),
+  size_(0)
 {
-	std::cout << "ModbusConfig: Constructor(istream&)" << std::endl;
-	
-	tags_.clear();
-	char c;
-	while (is >> c) {
-		is.putback(c);
-		tags_.push_back(ModbusTag(is));
-	}
-	
-	size_ = nRegisters();
-	return is;
+	std::cout << "ModbusPkg: Constructor(fstream, string)" << std::endl;
+	init(fs, filepath);
+}
+
+/** init() handles getting information into the ModbusPkg object,
+    and creating the space required to recieve a call made using
+	the object.
+*/ 
+std::fstream& ModbusPkg::init(std::fstream& fs,
+                              const std::string& filepath)
+{
+	readConfigFile(fs, filepath);
+	createDestination();
+	return fs;
 }
 
 /**
@@ -84,10 +85,11 @@ std::istream& ModbusConfig::readConfigStream(std::istream& is)
 	@param 'fs' reference to filestream
 	@param 'filepath' filename as string
 	@return reference to filestream.
- */
-std::fstream& ModbusConfig::readConfigFile(std::fstream& fs, 
-										   const std::string& filepath)
+*/
+std::fstream& ModbusPkg::readConfigFile(std::fstream& fs, 
+                                        const std::string& filepath)
 {
+	std::cout << "Reading configuration file..." << std::endl;
 	fs.open(filepath.c_str());
 	tags_.clear();
 
@@ -98,71 +100,23 @@ std::fstream& ModbusConfig::readConfigFile(std::fstream& fs,
 	}
 	fs.close(); // how to write as exception safe?
 				// try statement around while loop?
-	
-	size_ = nRegisters();
+	std::cout << "Finished reading configuration file" << std::endl;
+
 	return fs;
 }
 
-/**
-	Displays the Modbus configuration values held
-   	in the ModbusConfiguration vector<ModbusData>.
- */ 
-void ModbusConfig::print() const
+ModbusPkg&
+ModbusPkg::createDestination()
 {
-	std::cout << "----------------------------------" 
-			  << std::endl
-			  << "MODBUS CONFIGURATION FILE:"
-			  << std::endl
-		      << "NAME | Address | Datatype | Access" << std::endl;	
-
-	std::sort(tags_.begin(), tags_.end(), sortByAddress);
-
-	for (std::vector<ModbusTag>::const_iterator it = tags_.begin();
-	     it < tags_.end(); it++)
-   	{
-		std::cout << it->name() << " "
-				  << it->address() << " ";
-
-		switch(it->datatype()) {
-		case U16:
-			std::cout << "U16 ";
-			break;
-		case U32:
-			std::cout << "U32 ";
-			break;
-		case FLOAT:
-			std::cout << "SINGLE FLOAT ";
-			break;
-		case DOUBLE:
-			std::cout << "DOUBLE FLOAT ";
-			break;
-		default:
-			std::cout << "UNDEFINED ";
-			break;
-		}
-
-		switch(it->access()) {
-		case R:
-			std::cout << "READ";
-			break;
-		case W:
-			std::cout << "WRITE";
-			break;
-		case RW:
-			std::cout << "READ/WRITE";
-			break;
-		default:
-			std::cout << "UNDEFINED";
-			break;
-		}
-		std::cout << std::endl;
-
-	}
-	std::cout << "----------------------------------"
-			  << std::endl;
+    std::cout << "CALL: createDestination()" << std::endl;
+	
+	sizeOfBlock();
+	
+	auto destination_ = std::make_unique<uint16_t[]>(this->size());
+	return *this;
 }
 
-size_t ModbusConfig::nRegisters() const
+size_t ModbusPkg::sizeOfBlock() const
 {
 	size_t nRegisters = 0;
 	for (std::vector<ModbusTag>::const_iterator it = tags_.begin(); 
