@@ -64,6 +64,7 @@ public:
 	iterator end() { return tags_.end(); }
 	const_iterator end() const { return tags_.end(); }
 
+	uint16_t *destination() { return destination_.get(); } ;
 private:
 	std::vector<ModbusTag> tags_;
 	std::unique_ptr<uint16_t[]> destination_;

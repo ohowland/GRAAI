@@ -2,12 +2,13 @@
 #define GUARD_GRAAI_COMMIMPL_HPP_
 
 #include <string>
+#include <memory>
+#include <queue>
 #include <modbus.h>
 
+#include "ModbusPkg.hpp"
 
 namespace graComm {
-
-class ModbusConfig;
 
 class ModbusCommunication {
 /* Class for modbus communication */
@@ -18,9 +19,13 @@ public:
 	int port() const { return port_; }
 
 	ModbusCommunication& open();
-	void close(); 
+	void close();
+
+   	std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > 
+	commQueue() { return commQueue_; }	
 	
-	// int read(const ModbusConfig&, std::map<std::string, uint16_t>&);
+	int read(std::shared_ptr<ModbusPkg>&);
+	void waitOnQueue();
 
 protected:
 
@@ -28,10 +33,8 @@ private:
 	modbus_t *ctx_;
 	std::string ipAddress_; // Device ip address
 	int port_; 				// Modbus port default 502
-	uint16_t *destination_;  // Destination pointer for recieved modbus data
 
-	ModbusCommunication& createDestination(const ModbusConfig&);
-	ModbusCommunication& uncreateDestination();	
+	std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > commQueue_;
 	
 	// std::map<std::string, uint16_t> mapReturnedData(const ModbusConfig&);
 };

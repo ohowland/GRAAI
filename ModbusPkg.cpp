@@ -73,6 +73,7 @@ std::fstream& ModbusPkg::init(std::fstream& fs,
                               const std::string& filepath)
 {
 	readConfigFile(fs, filepath);
+	size_ = sizeOfBlock();
 	createDestination();
 	return fs;
 }
@@ -89,7 +90,7 @@ std::fstream& ModbusPkg::init(std::fstream& fs,
 std::fstream& ModbusPkg::readConfigFile(std::fstream& fs, 
                                         const std::string& filepath)
 {
-	std::cout << "Reading configuration file..." << std::endl;
+	std::cout << "ModbusPkg: Reading configuration file..." << std::endl;
 	fs.open(filepath.c_str());
 	tags_.clear();
 
@@ -100,7 +101,6 @@ std::fstream& ModbusPkg::readConfigFile(std::fstream& fs,
 	}
 	fs.close(); // how to write as exception safe?
 				// try statement around while loop?
-	std::cout << "Finished reading configuration file" << std::endl;
 
 	return fs;
 }
@@ -108,11 +108,10 @@ std::fstream& ModbusPkg::readConfigFile(std::fstream& fs,
 ModbusPkg&
 ModbusPkg::createDestination()
 {
-    std::cout << "CALL: createDestination()" << std::endl;
+    std::cout << "ModbusPkg: call createDestination() ";
 	
-	sizeOfBlock();
-	
-	auto destination_ = std::make_unique<uint16_t[]>(this->size());
+	destination_ = std::make_unique<uint16_t[]>(this->size());
+	std::cout << destination() << std::endl;
 	return *this;
 }
 
@@ -125,22 +124,22 @@ size_t ModbusPkg::sizeOfBlock() const
 		switch(it->datatype()) {
 		case U16:
 			nRegisters += (sizeof(uint16_t)/2);
-			std::cout << "FOUND: U16, destinationSize: " << nRegisters;
+			std::cout << "ModbusPkg: FOUND U16";
 			break;
 		case U32:
 			nRegisters += (sizeof(uint32_t)/2);
-			std::cout << "FOUND: U32, destinationSize: " << nRegisters;
+			std::cout << "ModbusPkg: FOUND U32";
 			break;
 		case FLOAT:
 			nRegisters += (sizeof(float)/2);
-			std::cout << "FOUND: float, destinationSize: " << nRegisters;
+			std::cout << "ModbusPkg: FOUND float";
 			break;
 		case DOUBLE:
 			nRegisters += (sizeof(double)/2);
-			std::cout << "FOUND: double, destinationSize: " << nRegisters;
+			std::cout << "ModbusPkg: FOUND double";
 			break;
 		default:
-			std::cout << "WARNING! FOUND: undefined type. behavior undefined!";
+			std::cout << "ModbusPkg: WARNING! FOUND: undefined type. behavior undefined!";
 			break;
 		}
 		std::cout << std::endl;

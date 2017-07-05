@@ -25,22 +25,21 @@ TagEngine::TagEngine() : pkgs_(), commQueue_()
 TagEngine::TagEngine(const std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > >& spcq)
 : pkgs_(), commQueue_(spcq)
 {
-	//commQueue_ = spcq;
 	std::cout << "TagEngine: Constructor call w/ queue" << std::endl;
 	if( auto spcq = commQueue_.lock() )
-		std::cout << "weak_ptr working" << std::endl;
+		std::cout << "TagEngine: Communication Queue linked to TagEngine" << std::endl;
 }
 
 TagEngine& TagEngine::addPkg(std::shared_ptr<ModbusPkg> pkg) {
     pkgs_.push_back(pkg);
-    return *this;	
+    return *this;
 }
 
 int TagEngine::run() {
+	std::cout << "TagEngine: calling run()" << std::endl;
     for(iterator it = pkgs_.begin(); it != pkgs_.end(); ++it) {
 		if(auto spcq = commQueue_.lock()) {
-			spcq->push_back(*it); //throws a core dump.
-			std::cout << "queued" << std::endl;
+			spcq->push_back(*it);
 		}
 	}
 	return 0;

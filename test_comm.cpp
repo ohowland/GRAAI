@@ -1,30 +1,25 @@
-#include <iostream>
-#include <string>
-#include <tr1/memory>
-#include <fstream>
-
 #include "comm.hpp"
-#include "config.hpp"
+#include "TagEngine.hpp"
+#include "ModbusPkg.hpp"
+
+#include <vector>
+#include <iostream>
+#include <fstream>
 
 int main() {
 
-	/* COMM.o */
+	graComm::ModbusCommunication comm1;
+	comm1.open();
 
-	std::tr1::shared_ptr<graComm::ModbusCommunication>
-	comm1( new graComm::ModbusCommunication() );
+	graComm::TagEngine engine1(comm1.commQueue());
 	
-	graComm::ModbusConfig config1;	
-
 	std::fstream fs;
-	config1.readConfigFile(fs, "ModbusConfig.txt");
-	
-	comm1->open();
-	std::map<std::string, uint16_t> map1;
-	comm1->read(config1, map1);
+	std::shared_ptr<graComm::ModbusPkg> pkg1(new graComm::ModbusPkg(fs, "ModbusConfig.txt"));
 
-	for(std::map<std::string, uint16_t>::const_iterator it = map1.begin();
-	    it != map1.end(); it++) {
-		std::cout << it->first << " " << it->second << std::endl;
-	}
+	engine1.addPkg(pkg1);
+	engine1.run();
+
+	comm1.waitOnQueue();
+    comm1.close();
 	return 0;
 }
