@@ -30,22 +30,32 @@ TagEngine::TagEngine(const std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg>
 		std::cout << "TagEngine: Communication Queue linked to TagEngine" << std::endl;
 }
 
+/** Add a ModbusPkg to the TagEngine list.
+*/
 TagEngine& TagEngine::addPkg(std::shared_ptr<ModbusPkg> pkg) {
     pkgs_.push_back(pkg);
     return *this;
 }
 
+/** Start the TagEngine updating from ModbusPkgs
+*/
 int TagEngine::run() {
-	std::cout << "TagEngine: calling run()" << std::endl;
-    for(iterator it = pkgs_.begin(); it != pkgs_.end(); ++it) {
-		if(auto spcq = commQueue_.lock()) {
-			spcq->push_back(*it);
-		}
+    std::cout << "TagEngine: calling run()" << std::endl;
+    runUpdateLoop_ = true;
+	while(runUpdateLoop_) {
+        for(iterator it = pkgs_.begin(); it != pkgs_.end(); ++it) {
+		    if(auto spcq = commQueue_.lock()) {
+			    spcq->push_back(*it);
+		    }
+	    }
 	}
 	return 0;
 }
 
+/** Stop the TagEngine updating ModbusPkgs
+*/
 int TagEngine::stop() {
+	runUpdateLoop_ = false;
 	return 0;
 }
 }

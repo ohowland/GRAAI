@@ -27,8 +27,8 @@ class ModbusTag {
 public:
 	ModbusTag();
 	ModbusTag(std::istream& is); 
-	
-	~ModbusTag() { }
+
+	~ModbusTag() { };
 
 	std::string name() const { return name_; }
 	uint16_t address() const { return address_; }
@@ -76,7 +76,6 @@ private:
 	ModbusPkg& createDestination();
 	
 	size_t sizeOfBlock() const;	
-	
 
 };
 

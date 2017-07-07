@@ -19,7 +19,9 @@ bool sortByAddress(const ModbusTag& lhs,
 	return lhs.address() < rhs.address();
 }
 
-/* ***ModbusTag implementation*** */
+/**
+ModbusTag implementation
+^^^^^^^^^^^^^^^^^^^^^^^^ */
 ModbusTag::ModbusTag()
  : name_(),
    address_(0),
@@ -36,8 +38,8 @@ ModbusTag::ModbusTag(std::istream& is)
    access_(R)
 {
 	std::cout << "ModbusTag: Constructor(istream&)" << std::endl;
-	int dtype; // for conversion to datatype
-	int atype; // for conversion to access
+	int dtype; /* for conversion to datatype */
+	int atype; /* for conversion to access */
 
 	is >> name_ >> address_ >> dtype >> atype;
 
@@ -45,8 +47,9 @@ ModbusTag::ModbusTag(std::istream& is)
 	access_ = static_cast<requestAccessType>(atype);
 }
 
-/* ***ModbusPkg Implementation*** */
-
+/** 
+ModbusPkg Implementation
+^^^^^^^^^^^^^^^^^^^^^^^^ */
 ModbusPkg::ModbusPkg()
 : tags_(),
   destination_(),
@@ -65,10 +68,10 @@ ModbusPkg::ModbusPkg(std::fstream& fs,
 	init(fs, filepath);
 }
 
-/** init() handles getting information into the ModbusPkg object,
-    and creating the space required to recieve a call made using
-	the object.
-*/ 
+/** 
+init() handles getting information into the ModbusPkg object,
+and creating the space required to recieve a call made using
+the object. */ 
 std::fstream& ModbusPkg::init(std::fstream& fs,
                               const std::string& filepath)
 {

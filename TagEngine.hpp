@@ -22,6 +22,7 @@ public:
 
 	int run();
 	int stop();
+	int print();
 
 	TagEngine& addPkg(std::shared_ptr<ModbusPkg>);
 
@@ -33,6 +34,8 @@ private:
 	
 	// Pointer to the communicating object's deque.
 	std::weak_ptr<std::deque<std::shared_ptr<ModbusPkg> > > commQueue_;
+
+	bool runUpdateLoop_;
 };
 
 }
