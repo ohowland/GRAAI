@@ -1,61 +1,58 @@
-/**
-	TagEngine.cpp
-	Implements a scan engine for ModbusPkg, updating through a ModbusComm class.
+/** 
+  TagEngine.cpp
+  Implements a scan engine for ModbusPkg, updating through a ModbusComm class.
 
-	@author Owen Edgerton
-	@version 1.0 7/3/17
-
-*/
+  @author Owen Edgerton
+  @version 1.0 7/3/17 */
 
 #include "TagEngine.hpp"
 
 #include <string>
 #include <queue>
 #include <iostream>
+#include <unistd.h>
 
 namespace graComm {
 
-TagEngine::TagEngine() : pkgs_(), commQueue_()
+typedef  std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > queueHandle;
+
+TagEngine::TagEngine() 
+: pkgs_(), commQueue_(), runUpdateLoop_(false)
 {
-    std::cout << "TagEngine: Constructor call" << std::endl;
+  std::cout << "TagEngine: Constructor call" << std::endl;
 }
 
-/** Create a constructor that can initalize a weak_ptr from a unique_ptr
-*/
-TagEngine::TagEngine(const std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > >& spcq)
-: pkgs_(), commQueue_(spcq)
+/** 
+  Create a constructor that can initalize a weak_ptr from a shared_ptr */
+TagEngine::TagEngine(const queueHandle& qh)
+: pkgs_(), commQueue_(qh), runUpdateLoop_(false) 
 {
-	std::cout << "TagEngine: Constructor call w/ queue" << std::endl;
-	if( auto spcq = commQueue_.lock() )
-		std::cout << "TagEngine: Communication Queue linked to TagEngine" << std::endl;
+  std::cout << "TagEngine: Constructor call w/ queue" << std::endl;
+  if(auto qh = commQueue_.lock()) {
+    std::cout << "TagEngine: Communication Queue linked to TagEngine" << std::endl;
+  } else {
+    std::cout << "TagEngine: Failed to link Communication Queue with TagEngine" << std::endl;
+  }
 }
 
 /** Add a ModbusPkg to the TagEngine list.
 */
 TagEngine& TagEngine::addPkg(std::shared_ptr<ModbusPkg> pkg) {
-    pkgs_.push_back(pkg);
-    return *this;
+  pkgs_.push_back(pkg);
+  return *this;
 }
 
-/** Start the TagEngine updating from ModbusPkgs
-*/
-int TagEngine::run() {
-    std::cout << "TagEngine: calling run()" << std::endl;
-    runUpdateLoop_ = true;
-	while(runUpdateLoop_) {
-        for(iterator it = pkgs_.begin(); it != pkgs_.end(); ++it) {
-		    if(auto spcq = commQueue_.lock()) {
-			    spcq->push_back(*it);
-		    }
-	    }
-	}
-	return 0;
+int TagEngine::run(bool* running) {
+  std::cout << "TagEngine: call run()" << std::endl;
+  while(*running) {
+    for(auto& pkg : pkgs_) {
+      if(auto qh = commQueue_.lock()) {
+        qh->push_back(pkg);
+      }
+    }
+    sleep(5);
+  }
+  return 0;
 }
 
-/** Stop the TagEngine updating ModbusPkgs
-*/
-int TagEngine::stop() {
-	runUpdateLoop_ = false;
-	return 0;
-}
 }

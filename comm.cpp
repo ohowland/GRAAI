@@ -14,7 +14,9 @@
 
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include <errno.h>
+#include <unistd.h>
 
 namespace graComm {
 
@@ -34,9 +36,6 @@ ModbusCommunication& ModbusCommunication::open() {
             << "IP: " << ipAddress_ << " Port: " << port_
             << std::endl;
 	
-// should this be wrapped in a smart pointer?
-// need to look at modbus's source code to see if there
-// is a new/delete	
   ctx_ = modbus_new_tcp(ipAddress().c_str(), port());
   if (ctx_ == NULL) {
     std::cout << "Unable to allocate libmodbus context"
@@ -45,7 +44,6 @@ ModbusCommunication& ModbusCommunication::open() {
   if (modbus_connect(ctx_) == -1) {
     std::cout << "Connection failed: " << modbus_strerror(errno)
               << std::endl;
-    modbus_free(ctx_);
   }
   return *this;
 }
@@ -58,27 +56,35 @@ void ModbusCommunication::close() {
 
 /**
 */
-void ModbusCommunication::waitOnQueue() {
-  if(!commQueue_->empty()) {
-    read(commQueue_->operator[](0));
-    commQueue_->pop_front();
+int ModbusCommunication::run(bool* running) {
+  std::cout << "ModbusCommunication: call run()" << std::endl;
+  while(*running) {
+    if(!(commQueue_->empty())) {
+      read(commQueue_->front());
+      commQueue_->pop_front();
+    }
+  usleep(1000);
   }
+  return 0;
 }
 
 int ModbusCommunication::read(std::shared_ptr<ModbusPkg>& spPkg) {
   int rc = -1; // registers recieved
-  if (spPkg->size()) {
-    std::cout << "ModbusCommunication: call read()" << std::endl
-              << "...# registers: " << spPkg->size()
-              << ", beginning address: " << spPkg->operator[](0).address()
-	      << ", destination: " << spPkg->destination() 
-              << std::endl;	
-    rc = modbus_read_registers(ctx_, spPkg->operator[](0).address(), spPkg->size(), spPkg->destination());
+  if (spPkg->size()) {  
+    rc = modbus_read_registers(ctx_, spPkg->front().address(), spPkg->size(), spPkg->destination());
   }	
+  
+  auto t = std::time(nullptr);
+  auto tm = *std::localtime(&t); 
   if (rc == -1) {
-    std::cout << "ModbusCommmunication: Read failed: " << modbus_strerror(errno)
-              << std::endl;
+    std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
+	      << "ModbusCommunication: " << "(" << ipAddress() << ") "
+	      << modbus_strerror(errno) <<  std::endl;
     return -1;
+  } else {
+    std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
+	      << "ModbusCommunication: " << "(" << ipAddress() << ") "
+	      << "TX Read" <<  std::endl;
   }
   return rc;
 }

@@ -13,10 +13,10 @@
 
 namespace graComm {
 
-bool sortByAddress(const ModbusTag& lhs,
-	               const ModbusTag& rhs)
+bool sortByAddress (const ModbusTag& lhs,
+                    const ModbusTag& rhs)
 {
-	return lhs.address() < rhs.address();
+  return lhs.address() < rhs.address();
 }
 
 /**
@@ -28,7 +28,7 @@ ModbusTag::ModbusTag()
    datatype_(U16),
    access_(R)
 {
-	std::cout << "ModbusTag: Constructor" << std::endl;
+  std::cout << "ModbusTag: Constructor" << std::endl;
 }
 
 ModbusTag::ModbusTag(std::istream& is)
@@ -37,14 +37,14 @@ ModbusTag::ModbusTag(std::istream& is)
    datatype_(U16),
    access_(R)
 {
-	std::cout << "ModbusTag: Constructor(istream&)" << std::endl;
-	int dtype; /* for conversion to datatype */
-	int atype; /* for conversion to access */
+  std::cout << "ModbusTag: Constructor(istream&)" << std::endl;
+  int dtype; /* for conversion to datatype */
+  int atype; /* for conversion to access */
 
-	is >> name_ >> address_ >> dtype >> atype;
+  is >> name_ >> address_ >> dtype >> atype;
 
-	datatype_ = static_cast<requestDataType>(dtype);
-	access_ = static_cast<requestAccessType>(atype);
+  datatype_ = static_cast<requestDataType>(dtype);
+  access_ = static_cast<requestAccessType>(atype);
 }
 
 /** 
@@ -55,17 +55,16 @@ ModbusPkg::ModbusPkg()
   destination_(),
   size_(0)
 {
-	std::cout << "ModbusPkg: Constructor" << std::endl;
+  std::cout << "ModbusPkg: Constructor" << std::endl;
 }
 
-ModbusPkg::ModbusPkg(std::fstream& fs, 
-				     const std::string& filepath)
+ModbusPkg::ModbusPkg(std::fstream& fs, const std::string& filepath)
 : tags_(),
   destination_(),
   size_(0)
 {
-	std::cout << "ModbusPkg: Constructor(fstream, string)" << std::endl;
-	init(fs, filepath);
+  std::cout << "ModbusPkg: Constructor(fstream, string)" << std::endl;
+  init(fs, filepath);
 }
 
 /** 
@@ -75,10 +74,10 @@ the object. */
 std::fstream& ModbusPkg::init(std::fstream& fs,
                               const std::string& filepath)
 {
-	readConfigFile(fs, filepath);
-	size_ = sizeOfBlock();
-	createDestination();
-	return fs;
+  readConfigFile(fs, filepath);
+  size_ = sizeOfBlock();
+  createDestination();
+  return fs;
 }
 
 /**
@@ -93,60 +92,63 @@ std::fstream& ModbusPkg::init(std::fstream& fs,
 std::fstream& ModbusPkg::readConfigFile(std::fstream& fs, 
                                         const std::string& filepath)
 {
-	std::cout << "ModbusPkg: Reading configuration file..." << std::endl;
-	fs.open(filepath.c_str());
-	tags_.clear();
+  std::cout << "ModbusPkg: Reading configuration file..." << std::endl;
+  fs.open(filepath.c_str());
+  tags_.clear();
 
-	char c;	
-	while (fs >> c) {
-		fs.putback(c);
-		tags_.push_back(ModbusTag(fs));
-	}
-	fs.close(); // how to write as exception safe?
-				// try statement around while loop?
+  char c;	
+  while (fs >> c) {
+    fs.putback(c);
+    tags_.push_back(ModbusTag(fs));
+  }
+  fs.close(); // how to write as exception safe?
+              // try statement around while loop?
 
-	return fs;
+  return fs;
 }
 
 ModbusPkg&
 ModbusPkg::createDestination()
 {
-    std::cout << "ModbusPkg: call createDestination() ";
+  std::cout << "ModbusPkg: call createDestination() ";
 	
-	destination_ = std::make_unique<uint16_t[]>(this->size());
-	std::cout << destination() << std::endl;
-	return *this;
+  destination_ = std::make_unique<uint16_t[]>(this->size());
+  std::cout << destination() << std::endl
+	    << "           size: " << size() 
+	    << std::endl;
+  return *this;
 }
 
 size_t ModbusPkg::sizeOfBlock() const
 {
-	size_t nRegisters = 0;
-	for (std::vector<ModbusTag>::const_iterator it = tags_.begin(); 
-		 it != tags_.end(); it++)
-	{
-		switch(it->datatype()) {
-		case U16:
-			nRegisters += (sizeof(uint16_t)/2);
-			std::cout << "ModbusPkg: FOUND U16";
-			break;
-		case U32:
-			nRegisters += (sizeof(uint32_t)/2);
-			std::cout << "ModbusPkg: FOUND U32";
-			break;
-		case FLOAT:
-			nRegisters += (sizeof(float)/2);
-			std::cout << "ModbusPkg: FOUND float";
-			break;
-		case DOUBLE:
-			nRegisters += (sizeof(double)/2);
-			std::cout << "ModbusPkg: FOUND double";
-			break;
-		default:
-			std::cout << "ModbusPkg: WARNING! FOUND: undefined type. behavior undefined!";
-			break;
-		}
-		std::cout << std::endl;
-	}
-	return nRegisters;
+  size_t nRegisters = 0;
+  for(ModbusTag it : tags_) {
+    switch(it.datatype()) {
+    case U16:
+      nRegisters += (sizeof(uint16_t)/2);
+      std::cout << "ModbusPkg: FOUND U16";
+      break;
+    case U32:
+      nRegisters += (sizeof(uint32_t)/2);
+      std::cout << "ModbusPkg: FOUND U32";
+      break;
+    case FLOAT:
+      nRegisters += (sizeof(float)/2);
+      std::cout << "ModbusPkg: FOUND float";
+      break;
+    case DOUBLE:
+      nRegisters += (sizeof(double)/2);
+      std::cout << "ModbusPkg: FOUND double";
+      break;
+    default:
+      std::cout << "ModbusPkg: WARNING! FOUND: undefined type. behavior undefined!";
+      break;
+    }
+    std::cout << std::endl;
+  }
+  return nRegisters;
 }
+
+void ModbusPkg::whois() { std::cout << "whois " << this << std::endl; }
+
 }
