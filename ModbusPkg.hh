@@ -9,8 +9,8 @@
 */
 
 
-#ifndef GUARD_GRAAI_MODBUSPKG_HPP_
-#define GUARD_GRAAI_MODBUSPKG_HPP_
+#ifndef GUARD_GRAAI_MODBUSPKG_HH_
+#define GUARD_GRAAI_MODBUSPKG_HH_
 
 #include <string>
 #include <vector>
@@ -66,13 +66,11 @@ public:
   value_type front() { return tags_.front(); }
 
   uint16_t* localDestination() { return localDestination_.get(); }  // returns a pointer, evading encapsulation, bad.
-  std::string destinationIpAddress() { return destinationIpAddress_; }
   void whois();
 
 private:
   std::vector<ModbusTag> tags_;
   std::unique_ptr<uint16_t[]> localDestination_;
-  std::string destinationIpAddress_;
   size_t size_;                 
 
   std::fstream& init(std::fstream&, const std::string&);

@@ -1,16 +1,13 @@
 /**
-	comm.cpp
-	Purpose: Implements the CommunicationCore and 
-	ModbusCommunication class. Wraps libmodbus.c in a C++
-	class. Meant to operate on a ModbusConfig class containing
-	modbus register data.	
+	ModbusServer.cc
+	Wraps libmodbus.c in a C++
 
 	@author Owen Edgerton
 	@version 1.0 6/17/17
 
 */
 
-#include "comm.hpp"
+#include "ModbusServer.hh"
 
 #include <string>
 #include <iostream>
@@ -20,10 +17,10 @@
 
 namespace graComm {
 
-// ModbusCommunication
-ModbusCommunication::ModbusCommunication()
-: ipAddress_("127.0.0.1"),
-  port_(1502),
+// ModbusServer
+ModbusServer::ModbusServer(const std::string& ip, int p)
+: ipAddress_(ip),
+  port_(p),
   commQueue_(new std::deque<std::shared_ptr<ModbusPkg> >)
 { 
   /* create libmodbus context */ 
@@ -39,7 +36,7 @@ ModbusCommunication::ModbusCommunication()
 
 /**
 begin polling modbus slave */
-ModbusCommunication& ModbusCommunication::open() {
+ModbusServer& ModbusServer::open() {
   print("Opening connection");
   
   if (modbus_connect(ctx_) == -1) {
@@ -51,7 +48,7 @@ ModbusCommunication& ModbusCommunication::open() {
 
 /** 
 stop polling modbus slave */
-void ModbusCommunication::close() {
+void ModbusServer::close() {
   modbus_close(ctx_);
   modbus_free(ctx_);
   print("Connection closed");
@@ -59,7 +56,7 @@ void ModbusCommunication::close() {
 
 /**
 */
-int ModbusCommunication::run(bool* running) {
+int ModbusServer::run(bool* running) {
   print("Server running");
   while(*running) {
     if(!(commQueue_->empty())) {
@@ -71,7 +68,7 @@ int ModbusCommunication::run(bool* running) {
   return 0;
 }
 
-int ModbusCommunication::read(std::shared_ptr<ModbusPkg>& spPkg) {
+int ModbusServer::read(std::shared_ptr<ModbusPkg>& spPkg) {
   int rc = -1; // registers recieved
   if (spPkg->size()) {  
     rc = modbus_read_registers(ctx_, spPkg->front().address(), spPkg->size(), spPkg->localDestination());
@@ -84,11 +81,11 @@ int ModbusCommunication::read(std::shared_ptr<ModbusPkg>& spPkg) {
   return rc;
 }
 
-void ModbusCommunication::print(const std::string& s) const {
+void ModbusServer::print(const std::string& s) const {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t); 
   std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
-	    << "ModbusCommunication: " << "(" << ipAddress() << ") "
+	    << "ModbusServer: " << "(" << ipAddress() << ") "
 	    << s  <<  std::endl;
 }
 

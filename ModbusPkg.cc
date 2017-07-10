@@ -7,7 +7,7 @@
 	@version 1.0 6/17/17
  */
 
-#include "ModbusPkg.hpp"
+#include "ModbusPkg.hh"
 #include <iostream>
 #include <algorithm> 
 #include <iomanip>
@@ -28,9 +28,7 @@ ModbusTag::ModbusTag()
    address_(0),
    datatype_(U16),
    access_(R)
-{
-  std::cout << "ModbusTag: Constructor" << std::endl;
-}
+{ }
 
 ModbusTag::ModbusTag(std::istream& is)
  : name_(),
@@ -38,7 +36,6 @@ ModbusTag::ModbusTag(std::istream& is)
    datatype_(U16),
    access_(R)
 {
-  std::cout << "ModbusTag: Constructor(istream&)" << std::endl;
   int dtype; /* for conversion to datatype */
   int atype; /* for conversion to access */
 
@@ -54,8 +51,7 @@ ModbusPkg Implementation
 ModbusPkg::ModbusPkg()
 : tags_(),
   localDestination_(),
-  size_(0),
-  destinationIpAddress_()
+  size_(0)
 { }
 
 ModbusPkg::ModbusPkg(std::fstream& fs, const std::string& filepath)
@@ -94,7 +90,6 @@ std::fstream& ModbusPkg::readConfigFile(std::fstream& fs,
   fs.open(filepath.c_str());
   tags_.clear();
 
-  fs >> destinationIpAddress_;
   char c;  
   while (fs >> c) {
     fs.putback(c);
@@ -138,7 +133,6 @@ size_t ModbusPkg::sizeOfBlock() const
       print("WARNING! FOUND undefined type. behavior undefined!");
       break;
     }
-    std::cout << std::endl;
   }
   return nRegisters;
 }

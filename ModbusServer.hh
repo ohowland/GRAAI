@@ -6,32 +6,33 @@
 #include <queue>
 #include <modbus.h>
 
-#include "ModbusPkg.hpp"
+#include "ModbusPkg.hh"
 
 namespace graComm {
 
-class ModbusCommunication {
-/* Class for modbus communication */
+class ModbusServer {
+
+typedef std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > sDequeHandle;
 
 public:
-  ModbusCommunication();
+  //ModbusServer();
+  explicit ModbusServer(const std::string&, int);
+  
   std::string ipAddress() const { return ipAddress_; }
   int port() const { return port_; }
 
-  ModbusCommunication& open();
+  ModbusServer& open();
   void close();
-
-  std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > 
-  commQueue() { return commQueue_; }	
-
   int read(std::shared_ptr<ModbusPkg>&);
   int run(bool* const);
 
+  sDequeHandle commQueue() { return commQueue_; }	
+
 private:
   modbus_t *ctx_;
-  std::string ipAddress_; // Device ip address
-  int port_;              // Modbus port default 502
-  std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > commQueue_;
+  std::string ipAddress_;  // Device ip address
+  int port_;               // Modbus port default 502
+  sDequeHandle commQueue_; // update queue handle
   
   void print(const std::string&) const;
 };
