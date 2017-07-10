@@ -31,8 +31,9 @@ private:
   modbus_t *ctx_;
   std::string ipAddress_; // Device ip address
   int port_;              // Modbus port default 502
-
   std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > commQueue_;
+  
+  void print(const std::string&) const;
 };
 
 }

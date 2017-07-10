@@ -10,6 +10,7 @@
 #include "ModbusPkg.hpp"
 #include <iostream>
 #include <algorithm> 
+#include <iomanip>
 
 namespace graComm {
 
@@ -52,18 +53,16 @@ ModbusPkg Implementation
 ^^^^^^^^^^^^^^^^^^^^^^^^ */
 ModbusPkg::ModbusPkg()
 : tags_(),
-  destination_(),
-  size_(0)
-{
-  std::cout << "ModbusPkg: Constructor" << std::endl;
-}
+  localDestination_(),
+  size_(0),
+  destinationIpAddress_()
+{ }
 
 ModbusPkg::ModbusPkg(std::fstream& fs, const std::string& filepath)
 : tags_(),
-  destination_(),
+  localDestination_(),
   size_(0)
 {
-  std::cout << "ModbusPkg: Constructor(fstream, string)" << std::endl;
   init(fs, filepath);
 }
 
@@ -92,11 +91,11 @@ std::fstream& ModbusPkg::init(std::fstream& fs,
 std::fstream& ModbusPkg::readConfigFile(std::fstream& fs, 
                                         const std::string& filepath)
 {
-  std::cout << "ModbusPkg: Reading configuration file..." << std::endl;
   fs.open(filepath.c_str());
   tags_.clear();
 
-  char c;	
+  fs >> destinationIpAddress_;
+  char c;  
   while (fs >> c) {
     fs.putback(c);
     tags_.push_back(ModbusTag(fs));
@@ -110,12 +109,7 @@ std::fstream& ModbusPkg::readConfigFile(std::fstream& fs,
 ModbusPkg&
 ModbusPkg::createDestination()
 {
-  std::cout << "ModbusPkg: call createDestination() ";
-	
-  destination_ = std::make_unique<uint16_t[]>(this->size());
-  std::cout << destination() << std::endl
-	    << "           size: " << size() 
-	    << std::endl;
+  localDestination_ = std::make_unique<uint16_t[]>(this->size());
   return *this;
 }
 
@@ -126,27 +120,34 @@ size_t ModbusPkg::sizeOfBlock() const
     switch(it.datatype()) {
     case U16:
       nRegisters += (sizeof(uint16_t)/2);
-      std::cout << "ModbusPkg: FOUND U16";
+      print("FOUND U16");
       break;
     case U32:
       nRegisters += (sizeof(uint32_t)/2);
-      std::cout << "ModbusPkg: FOUND U32";
+      print("FOUND U32");
       break;
     case FLOAT:
       nRegisters += (sizeof(float)/2);
-      std::cout << "ModbusPkg: FOUND float";
+      print("FOUND float");
       break;
     case DOUBLE:
       nRegisters += (sizeof(double)/2);
-      std::cout << "ModbusPkg: FOUND double";
+      print("FOUND double");
       break;
     default:
-      std::cout << "ModbusPkg: WARNING! FOUND: undefined type. behavior undefined!";
+      print("WARNING! FOUND undefined type. behavior undefined!");
       break;
     }
     std::cout << std::endl;
   }
   return nRegisters;
+}
+
+void ModbusPkg::print(const std::string& s) const {
+  auto t = std::time(nullptr);
+  auto tm = *std::localtime(&t); 
+  std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
+	    << "ModbusPkg: " << s  <<  std::endl;
 }
 
 void ModbusPkg::whois() { std::cout << "whois " << this << std::endl; }

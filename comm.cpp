@@ -26,21 +26,22 @@ ModbusCommunication::ModbusCommunication()
   port_(1502),
   commQueue_(new std::deque<std::shared_ptr<ModbusPkg> >)
 { 
-  std::cout << "ModbusCommunication: Constructor" << std::endl;
-}
-
-ModbusCommunication& ModbusCommunication::open() {
-
-/* begin polling modbus slave */
-  std::cout << "ModbusCommunication: Opening connection. "
-            << "IP: " << ipAddress_ << " Port: " << port_
-            << std::endl;
-	
+  /* create libmodbus context */ 
   ctx_ = modbus_new_tcp(ipAddress().c_str(), port());
   if (ctx_ == NULL) {
     std::cout << "Unable to allocate libmodbus context"
               << std::endl;
   }
+ 
+  /* set recovery type */ 
+  modbus_set_error_recovery(ctx_, MODBUS_ERROR_RECOVERY_LINK);
+}
+
+/**
+begin polling modbus slave */
+ModbusCommunication& ModbusCommunication::open() {
+  print("Opening connection");
+  
   if (modbus_connect(ctx_) == -1) {
     std::cout << "Connection failed: " << modbus_strerror(errno)
               << std::endl;
@@ -48,16 +49,18 @@ ModbusCommunication& ModbusCommunication::open() {
   return *this;
 }
 
+/** 
+stop polling modbus slave */
 void ModbusCommunication::close() {
-/* stop polling modbus slave */
   modbus_close(ctx_);
   modbus_free(ctx_);
+  print("Connection closed");
 }
 
 /**
 */
 int ModbusCommunication::run(bool* running) {
-  std::cout << "ModbusCommunication: call run()" << std::endl;
+  print("Server running");
   while(*running) {
     if(!(commQueue_->empty())) {
       read(commQueue_->front());
@@ -71,22 +74,22 @@ int ModbusCommunication::run(bool* running) {
 int ModbusCommunication::read(std::shared_ptr<ModbusPkg>& spPkg) {
   int rc = -1; // registers recieved
   if (spPkg->size()) {  
-    rc = modbus_read_registers(ctx_, spPkg->front().address(), spPkg->size(), spPkg->destination());
+    rc = modbus_read_registers(ctx_, spPkg->front().address(), spPkg->size(), spPkg->localDestination());
   }	
   
+  if (rc == -1)
+    print(modbus_strerror(errno));
+  else
+    print("TX Read"); 
+  return rc;
+}
+
+void ModbusCommunication::print(const std::string& s) const {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t); 
-  if (rc == -1) {
-    std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
-	      << "ModbusCommunication: " << "(" << ipAddress() << ") "
-	      << modbus_strerror(errno) <<  std::endl;
-    return -1;
-  } else {
-    std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
-	      << "ModbusCommunication: " << "(" << ipAddress() << ") "
-	      << "TX Read" <<  std::endl;
-  }
-  return rc;
+  std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
+	    << "ModbusCommunication: " << "(" << ipAddress() << ") "
+	    << s  <<  std::endl;
 }
 
 }
