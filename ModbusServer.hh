@@ -11,22 +11,21 @@
 namespace graComm {
 
 class ModbusServer {
-
-typedef std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > sDequeHandle;
-
 public:
-  //ModbusServer();
-  explicit ModbusServer(const std::string&, int);
+  typedef std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > sDequeHandle;
+  typedef std::weak_ptr<std::deque<std::shared_ptr<ModbusPkg> > > wDequeHandle;
+
+  ModbusServer(const std::string& ip = "127.0.0.1", int port = 1504);
   
   std::string ipAddress() const { return ipAddress_; }
   int port() const { return port_; }
+  wDequeHandle getQueue() { return wDequeHandle(commQueue_); };
 
-  ModbusServer& open();
+  int open();
   void close();
+  int run();
+  
   int read(std::shared_ptr<ModbusPkg>&);
-  int run(bool* const);
-
-  sDequeHandle commQueue() { return commQueue_; }	
 
 private:
   modbus_t *ctx_;
@@ -34,7 +33,7 @@ private:
   int port_;               // Modbus port default 502
   sDequeHandle commQueue_; // update queue handle
   
-  void print(const std::string&) const;
+  void print_(const std::string&) const;
 };
 
 }

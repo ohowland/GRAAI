@@ -16,11 +16,8 @@ class TagEngine {
 public:
   typedef std::list<std::shared_ptr<ModbusLib> >::iterator iterator;
   typedef const std::list<std::shared_ptr<ModbusLib> >::const_iterator const_iterator;
-  // typedef std::shared_ptr<std::deque<std::shared_ptr<ModbusLib> > > sDequeHandle;
-  // typedef std::weak_ptr<std::deque<std::shared_ptr<ModbusLib> > > wDequeHandle;
 
-  TagEngine();
-  // TagEngine(const sDequeHandle&);
+  TagEngine(const int updateRate_ms = 1000);
   ~TagEngine() { }	
 
   iterator begin() { return libs_.begin(); }
@@ -29,28 +26,16 @@ public:
   const_iterator end() const { return libs_.end(); }
 
   size_t size() { return libs_.size(); }
-  int run(bool*);
+  int updateTags(bool*);
 
   TagEngine& addLibrary(std::shared_ptr<ModbusLib>);
 
-  // TagEngine& addServer(int, const sDequeHandle&);
-  // TagEngine& addPkg(std::shared_ptr<ModbusPkg>);
-
 private:
-/**
-Owns a list of ModbusPkg
-ModbusPkgs should be associated with a Process Name, used
-to determine which communicating object they should be sent to. */
-  //std::list<std::shared_ptr<ModbusPkg> > pkgs_;
+  std::list<std::shared_ptr<ModbusLib> > libs_; // Contains Server and Pkgs
+  int const updateRate_ms_; 
+  void print_(const std::string&) const;
 
-/** Owns a list of ModbusLibs */
-  std::list<std::shared_ptr<ModbusLib> > libs_;
-
-/** Pointer to the communicating object's deque. */
-//  wDequeHandle commQueue_;
-//  std::unordered_map<int, wDequeHandle> commQueueMap_;
-  
-  void print(const std::string&) const;
+  int startServers(bool*);
 };
 
 }

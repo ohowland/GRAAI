@@ -20,32 +20,15 @@ int main() {
   signal(SIGTERM, stopHandler);
 
   graComm::TagEngine engine1;
+ 
+  /* Create new ModbusLib */
+  std::shared_ptr<graComm::ModbusLib> lib1(new graComm::ModbusLib());
+  lib1->addServer(std::shared_ptr<graComm::ModbusServer>(new graComm::ModbusServer("127.0.0.1", 1504)));
   std::fstream fs; /* Create a ModbusPkg from file */ 
-  std::shared_ptr<graComm::ModbusPkg> pkg1(new graComm::ModbusPkg(fs, "ModbusConfig.txt"));
-  std::shared_ptr<graComm::ModbusPkg> pkg2(new graComm::ModbusPkg(fs, "ModbusConfig2.txt"));
-  
-  engine1.addPkg(pkg1); /* Add ModbusPkg to the TagEngine */
-  engine1.addPkg(pkg2);
+  lib1->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
 
-  /* Create servers required by TagEngine ModbusPkgs */
-  std::vector<graComm::ModbusCommunication> servers;
-  
-  std::vector<std::thread *> serverThreads;
-  for(auto s : servers) {
-    serverThreads.push_back(new std::thread(&graComm::ModbusCommunication::run, &s, &running)); 
-  } 
-
-  std::thread te1(&graComm::TagEngine::run, &engine1, &running); /* Start the TagEngine */
-
-  te1.join();
-  
-  for(auto thread : serverThreads) {
-    thread->join();
-  }
-
-  for(auto server : servers) {
-    server.close();
-  }
+  engine1.addLibrary(lib1); /* Add ModbusPkg to the TagEngine */
+  engine1.updateTags(&running);
 
   return 0;
 }

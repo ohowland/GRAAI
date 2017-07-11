@@ -5,53 +5,53 @@
 #include <iostream>
 #include <string>
 #include <stdint.h>
+#include <stdio.h>
 #include <errno.h>
 
-int main()
+int main(int argc, char** argv)
 {
-	int s = -1;
-	modbus_mapping_t *mb_mapping = NULL;
-	modbus_t *ctx = NULL;
+  int s = -1;
+  modbus_mapping_t *mb_mapping = NULL;
+  modbus_t *ctx = NULL;
 	
-	ctx = modbus_new_tcp("127.0.0.1", 1502);
-	s = modbus_tcp_listen(ctx, 1);
-	modbus_tcp_accept(ctx, &s);
+  int port = atoi(argv[1]);	
+  std::cout << port << std::endl;
 
-	mb_mapping = modbus_mapping_new(0, 0,
-									5, 0);
+  ctx = modbus_new_tcp("127.0.0.1", port);
+  s = modbus_tcp_listen(ctx, 1);
+  modbus_tcp_accept(ctx, &s);
 
-	mb_mapping->tab_registers[0] = 1234;
-	mb_mapping->tab_registers[1] = 4321;
-	mb_mapping->tab_registers[2] = 1212;
-	mb_mapping->tab_registers[3] = 2121;
-	mb_mapping->tab_registers[4] = 9999;;
+  mb_mapping = modbus_mapping_new(0, 0, 5, 0);
 
-	if (mb_mapping == NULL) {
-		std::cout << "Failed to allocate the mapping " 
-				  << modbus_strerror(errno)
-				  << std::endl;
-		modbus_free(ctx);
-		return -1;
-	}
+  mb_mapping->tab_registers[0] = 1234;
+  mb_mapping->tab_registers[1] = 4321;
+  mb_mapping->tab_registers[2] = 1212;
+  mb_mapping->tab_registers[3] = 2121;
+  mb_mapping->tab_registers[4] = 9999;;
 
-	while(true) {
-		uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
-		int rc;
+  if (mb_mapping == NULL) {
+    std::cout << "Failed to allocate the mapping " 
+              << modbus_strerror(errno)
+              << std::endl;
+    modbus_free(ctx);
+    return -1;
+  }
 
-		rc = modbus_receive(ctx, query);
-		if (rc > 0) {
-			modbus_reply(ctx, query, rc, mb_mapping);
-		} else if (rc == -1) {
-			break;
-		}
-	}
+  while(true) {
+    uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
+    int rc;
 
-		std::cout << modbus_strerror(errno) << std::endl;
+    rc = modbus_receive(ctx, query);
+    if (rc > 0) {
+      modbus_reply(ctx, query, rc, mb_mapping);
+    } else if (rc == -1) {
+      break;
+    }
+  }
 
-		modbus_mapping_free(mb_mapping);
-
-		modbus_close(ctx);
-		modbus_free(ctx);	
-
-	return 0;
+  std::cout << modbus_strerror(errno) << std::endl;
+  modbus_mapping_free(mb_mapping);
+  modbus_close(ctx);
+  modbus_free(ctx);	
+  return 0;
 }

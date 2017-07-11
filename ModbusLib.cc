@@ -15,17 +15,28 @@ ModbusLib::ModbusLib()
 
 ModbusLib& ModbusLib::addServer(std::shared_ptr<ModbusServer> spMS) {
   server_ = spMS;
-  print("server updated");
+  print_("server updated");
   return *this;
 }
 
 ModbusLib& ModbusLib::addPkg(std::shared_ptr<ModbusPkg> pkg) {
   pkgs_.push_back(pkg);
-  print("package list updated");
+  print_("package list updated");
   return *this;
 }
 
-void ModbusLib::print(const std::string& s) const {
+/* enque tags owned by this library into the server's consumer queue; */
+ModbusLib& ModbusLib::updateLibTags() {
+  if(auto qh = server_->getQueue().lock()) {
+    for (auto pkg : pkgs_) {
+      qh->push_back(pkg);
+    }
+  server_->run();
+  }
+  return *this;
+}
+
+void ModbusLib::print_(const std::string& s) const {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t); 
   std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 

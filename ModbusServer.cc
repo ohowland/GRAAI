@@ -32,38 +32,33 @@ ModbusServer::ModbusServer(const std::string& ip, int p)
  
   /* set recovery type */ 
   modbus_set_error_recovery(ctx_, MODBUS_ERROR_RECOVERY_LINK);
+//  modbus_set_response_timeout(ctx, 0, 200000);
 }
 
-/**
-begin polling modbus slave */
-ModbusServer& ModbusServer::open() {
-  print("Opening connection");
+/* Open connection to modbus slave */
+int ModbusServer::open() {
+  print_("Opening connection");
   
   if (modbus_connect(ctx_) == -1) {
     std::cout << "Connection failed: " << modbus_strerror(errno)
               << std::endl;
+    return -1;
   }
-  return *this;
+  return 0;
 }
 
-/** 
-stop polling modbus slave */
+/* Close connection to modbus slave */
 void ModbusServer::close() {
   modbus_close(ctx_);
   modbus_free(ctx_);
-  print("Connection closed");
+  print_("Connection closed");
 }
 
-/**
-*/
-int ModbusServer::run(bool* running) {
-  print("Server running");
-  while(*running) {
-    if(!(commQueue_->empty())) {
-      read(commQueue_->front());
-      commQueue_->pop_front();
-    }
-  usleep(1000);
+/* Run Modbus server consumer loop */
+int ModbusServer::run() {
+  for(auto pkg : *(commQueue_.get())) {
+    read(commQueue_->front());
+    commQueue_->pop_front();
   }
   return 0;
 }
@@ -75,13 +70,13 @@ int ModbusServer::read(std::shared_ptr<ModbusPkg>& spPkg) {
   }	
   
   if (rc == -1)
-    print(modbus_strerror(errno));
+    print_(modbus_strerror(errno));
   else
-    print("TX Read"); 
+    print_("TX Read"); 
   return rc;
 }
 
-void ModbusServer::print(const std::string& s) const {
+void ModbusServer::print_(const std::string& s) const {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t); 
   std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 

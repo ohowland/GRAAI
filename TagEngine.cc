@@ -11,29 +11,40 @@
 #include <queue>
 #include <iostream>
 #include <iomanip>
+#include <thread>
+#include <unistd.h>
 
 namespace graComm {
 
 /**
 Constructor */
-TagEngine::TagEngine() 
-: libs_()
+TagEngine::TagEngine(const int updateRate_ms) 
+: libs_(),
+  updateRate_ms_(updateRate_ms)
 { }
 
 TagEngine& TagEngine::addLibrary(std::shared_ptr<ModbusLib> lib) {
   libs_.push_back(lib);
-  print("lib list updated");
+  print_("lib list updated");
   return *this;
 }
 
-int TagEngine::run(bool* running) {
+int TagEngine::updateTags(bool* running) {
   while(*running) {
-    // TODO: call update on libs contained in libs_
+    std::vector<std::thread> libThreads;
+    for(auto lib : libs_) {
+      libThreads.push_back(std::thread(&ModbusLib::updateLibTags, lib));
+    }
+
+    for(auto it = libThreads.begin(); it != libThreads.end(); ++it) {
+      it->join();
+    }    
+    sleep(5);
   }
   return 0;
 }
 
-void TagEngine::print(const std::string& s) const {
+void TagEngine::print_(const std::string& s) const {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t); 
   std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 

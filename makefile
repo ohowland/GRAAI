@@ -1,5 +1,5 @@
 CXX= g++
-CXXSOURCES= ModbusServer.cc TagEngine.cc ModbusPkg.cc Lib.cc
+CXXSOURCES= ModbusServer.cc TagEngine.cc ModbusPkg.cc ModbusLib.cc
 CXXOBJECTS= $(patsubst %.cc, %.o, $(CXXSOURCES))
 OPTIMFLAGS= -g -O
 PACKAGES= libmodbus 
@@ -19,6 +19,9 @@ test_TagEngine: test_TagEngine.o $(CXXOBJECTS)
 	$(LINK.cc) -rdynamic $^ $(LIBES) -o $@
 
 test_ModbusPkg: test_ModbusPkg.o $(CXXOBJECTS)
+	$(LINK.cc) -rdynamic $^ $(LIBES) -o $@
+
+test_server: test_server.o $(CXXOBJECTS)
 	$(LINK.cc) -rdynamic $^ $(LIBES) -o $@
 
 clean:

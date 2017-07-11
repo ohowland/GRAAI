@@ -15,11 +15,14 @@ public:
   ModbusLib& addServer(std::shared_ptr<ModbusServer>);
   ModbusLib& addPkg(std::shared_ptr<ModbusPkg>);
 
+  ModbusLib& updateLibTags();
+  ModbusLib& startServer(bool*);
+
 private:
   std::list<std::shared_ptr<ModbusPkg> > pkgs_;
   std::shared_ptr<ModbusServer> server_;
   
-  void print(const std::string&) const;
+  void print_(const std::string&) const;
 };
 
 
