@@ -2,6 +2,9 @@
 #define GUARD_GRAAI_MODBUSLIB_HH_
 
 #include <list>
+#include <mutex>
+#include <future>
+
 #include "ModbusPkg.hh"
 #include "ModbusServer.hh"
 
@@ -16,12 +19,13 @@ public:
   ModbusLib& addPkg(std::shared_ptr<ModbusPkg>);
 
   ModbusLib& updateLibTags();
-  ModbusLib& startServer(bool*);
+
+  void whois() const;
 
 private:
   std::list<std::shared_ptr<ModbusPkg> > pkgs_;
   std::shared_ptr<ModbusServer> server_;
-  
+  std::mutex updateMutex_; 
   void print_(const std::string&) const;
 };
 

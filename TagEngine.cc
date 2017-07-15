@@ -13,6 +13,8 @@
 #include <iomanip>
 #include <thread>
 #include <unistd.h>
+#include <algorithm>
+#include <future>
 
 namespace graComm {
 
@@ -29,16 +31,31 @@ TagEngine& TagEngine::addLibrary(std::shared_ptr<ModbusLib> lib) {
   return *this;
 }
 
-int TagEngine::updateTags(bool* running) {
-  while(*running) {
-    std::vector<std::thread> libThreads;
-    for(auto lib : libs_) {
-      libThreads.push_back(std::thread(&ModbusLib::updateLibTags, lib));
-    }
+// producer: TagEngine calls for Tags to be updated (through ModbusLibs)
+// worker: ModbusServer async communication.
+// consumer: Confirms ModbusLibs are updated.
 
-    for(auto it = libThreads.begin(); it != libThreads.end(); ++it) {
-      it->join();
-    }    
+// set all tags as updating (initial).
+// if not updating, build thread to update tags.
+// when done set as not updating.
+void TagEngine::enqueLib(std::future<std::shared_ptr<ModbusLib> > futureLib) {
+  futureLib.get()->whois();
+}
+
+int TagEngine::updateTags(bool* running) {
+  std::vector<std::shared_ptr<ModbusLib> > updateLibs;
+  for(auto& lib : libs_)
+    updateLibs.push_back(lib); 
+
+  // we want to pass the reference to the shared_ptr<ModbusLib>, not the reference to the ModbusLib itself. 
+  while(*running) {
+    for(auto& lib : updateLibs) {
+      std::packaged_task<ModbusLib(ModbusLib*)> updateLib_task(&ModbusLib::updateLibTags);
+      std::future<ModbusLib> updateLib_future = updateLib_task.get_future();
+
+      std::thread(std::move(updateLib_task), &lib).detach();
+      std::thread(&TagEngine::enqueLib, std::move(updateLib_future)).detach();
+      }
     sleep(5);
   }
   return 0;
