@@ -29,7 +29,7 @@ public:
   int updateTags(bool*);
 
   TagEngine& addLibrary(std::shared_ptr<ModbusLib>);
-  void enqueLib(std::future<std::shared_ptr<ModbusLib> >);
+  int enqueLib(std::future<std::shared_ptr<ModbusLib> >, std::vector<std::shared_ptr<ModbusLib> >*);
 
 private:
   std::list<std::shared_ptr<ModbusLib> > libs_; // Contains Server and Pkgs

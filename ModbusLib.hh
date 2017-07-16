@@ -18,7 +18,7 @@ public:
   ModbusLib& addServer(std::shared_ptr<ModbusServer>);
   ModbusLib& addPkg(std::shared_ptr<ModbusPkg>);
 
-  ModbusLib& updateLibTags();
+  std::shared_ptr<ModbusLib> updateLibTags(std::shared_ptr<ModbusLib>);
 
   void whois() const;
 

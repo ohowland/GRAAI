@@ -27,7 +27,7 @@ ModbusLib& ModbusLib::addPkg(std::shared_ptr<ModbusPkg> pkg) {
 }
 
 /* enque tags owned by this library into the server's consumer queue; */
-ModbusLib& ModbusLib::updateLibTags() {
+std::shared_ptr<ModbusLib> ModbusLib::updateLibTags(std::shared_ptr<ModbusLib> spml) {
   std::lock_guard<std::mutex> lock(this->updateMutex_);
   if(auto qh = server_->getQueue().lock()) {
     for (auto pkg : pkgs_) {
@@ -35,7 +35,7 @@ ModbusLib& ModbusLib::updateLibTags() {
     }
   server_->run(); 
   }
-  return *this;
+  return spml;
 }
 
 void ModbusLib::print_(const std::string& s) const {

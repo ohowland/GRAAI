@@ -35,28 +35,33 @@ TagEngine& TagEngine::addLibrary(std::shared_ptr<ModbusLib> lib) {
 // worker: ModbusServer async communication.
 // consumer: Confirms ModbusLibs are updated.
 
-// set all tags as updating (initial).
-// if not updating, build thread to update tags.
-// when done set as not updating.
-void TagEngine::enqueLib(std::future<std::shared_ptr<ModbusLib> > futureLib) {
-  futureLib.get()->whois();
+int TagEngine::enqueLib(std::future<std::shared_ptr<ModbusLib> > futureLib, std::vector<std::shared_ptr<ModbusLib> >* updateLibs) {
+  // Why can't I pass a reference to update libs?
+  // pointer works fine.
+  // will need to mutex updateLibs so that two calls to enqueLib do not create a race condition.
+  updateLibs->push_back(futureLib.get());
+  return 0;
 }
 
 int TagEngine::updateTags(bool* running) {
   std::vector<std::shared_ptr<ModbusLib> > updateLibs;
+  
   for(auto& lib : libs_)
     updateLibs.push_back(lib); 
 
-  // we want to pass the reference to the shared_ptr<ModbusLib>, not the reference to the ModbusLib itself. 
   while(*running) {
-    for(auto& lib : updateLibs) {
-      std::packaged_task<ModbusLib(ModbusLib*)> updateLib_task(&ModbusLib::updateLibTags);
-      std::future<ModbusLib> updateLib_future = updateLib_task.get_future();
+    //for(auto it = updateLibs.begin(); it != updateLibs.end(); ++it)
+    for(auto lib : updateLibs) {
+      std::packaged_task<std::shared_ptr<ModbusLib>(ModbusLib*, std::shared_ptr<ModbusLib>)> updateLib_task(&ModbusLib::updateLibTags);
+      std::future<std::shared_ptr<ModbusLib> > updateLib_future = updateLib_task.get_future();
 
-      std::thread(std::move(updateLib_task), &lib).detach();
-      std::thread(&TagEngine::enqueLib, std::move(updateLib_future)).detach();
-      }
-    sleep(5);
+      std::thread(std::move(updateLib_task), lib.get(), lib).detach();
+      std::thread(&TagEngine::enqueLib, this, std::move(updateLib_future), &updateLibs).detach(); //why can't i pass a updateLibs ref to this thread?
+      
+    }
+    // libs should be erased as they are returned.
+    updateLibs.erase(updateLibs.begin(), updateLibs.end());
+    sleep(1);
   }
   return 0;
 }
