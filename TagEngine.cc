@@ -22,6 +22,8 @@ namespace graComm {
 Constructor */
 TagEngine::TagEngine(const int updateRate_ms) 
 : libs_(),
+  updateLibs_(),
+  updateLibs_mutex_(),
   updateRate_ms_(updateRate_ms)
 { }
 
@@ -31,37 +33,37 @@ TagEngine& TagEngine::addLibrary(std::shared_ptr<ModbusLib> lib) {
   return *this;
 }
 
-// producer: TagEngine calls for Tags to be updated (through ModbusLibs)
-// worker: ModbusServer async communication.
-// consumer: Confirms ModbusLibs are updated.
-
-int TagEngine::enqueLib(std::future<std::shared_ptr<ModbusLib> > futureLib, std::vector<std::shared_ptr<ModbusLib> >* updateLibs) {
-  // Why can't I pass a reference to update libs?
-  // pointer works fine.
-  // will need to mutex updateLibs so that two calls to enqueLib do not create a race condition.
-  updateLibs->push_back(futureLib.get());
+int TagEngine::enqueLib(std::future<std::shared_ptr<ModbusLib> > futureLib) {
+  auto spml = futureLib.get();                          // spml: shared pointer to ModbusLib
+  std::lock_guard<std::mutex> lock(updateLibs_mutex_);  // lock ulibs_
+  updateLibs_.push_back(spml);                          // reinsert ModbusLib 
   return 0;
 }
 
 int TagEngine::updateTags(bool* running) {
-  std::vector<std::shared_ptr<ModbusLib> > updateLibs;
-  
-  for(auto& lib : libs_)
-    updateLibs.push_back(lib); 
+  updateLibs_.clear();
+  for(auto& lib : libs_) {
+    updateLibs_.push_back(lib); 
+  }
 
   while(*running) {
-    //for(auto it = updateLibs.begin(); it != updateLibs.end(); ++it)
-    for(auto lib : updateLibs) {
+    updateLibs_mutex_.lock();
+    for(auto it = updateLibs_.begin(); it != updateLibs_.end(); ++it) {
+      /* package a ModbusLib::updateLibTags task for separate thread execution. */
       std::packaged_task<std::shared_ptr<ModbusLib>(ModbusLib*, std::shared_ptr<ModbusLib>)> updateLib_task(&ModbusLib::updateLibTags);
+      /* create a future promised a shared_ptr<ModbusLib> that has been updated */
       std::future<std::shared_ptr<ModbusLib> > updateLib_future = updateLib_task.get_future();
 
-      std::thread(std::move(updateLib_task), lib.get(), lib).detach();
-      std::thread(&TagEngine::enqueLib, this, std::move(updateLib_future), &updateLibs).detach(); //why can't i pass a updateLibs ref to this thread?
+      /* Modbuslib::updateLibTags thread: */
+      std::thread(std::move(updateLib_task), it->get(), *it).detach();
+
+      /* Enque returned shared_ptr<ModbusLib> to the updateLibs list (for continued update) */
+      std::thread(&TagEngine::enqueLib, this, std::move(updateLib_future)).detach();
       
+      updateLibs_.pop_front();
     }
-    // libs should be erased as they are returned.
-    updateLibs.erase(updateLibs.begin(), updateLibs.end());
-    sleep(1);
+    updateLibs_mutex_.unlock();
+    usleep(updateRate_ms_*1000);
   }
   return 0;
 }

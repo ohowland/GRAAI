@@ -29,6 +29,16 @@ int main() {
 
   std::fstream fs; /* Create a ModbusPkg from file */ 
   lib1->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
+  lib1->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
+  lib1->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
+  lib1->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
+  lib1->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
+  
+  lib2->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
+  lib2->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
+  lib2->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
+  lib2->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
+  lib2->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
   lib2->addPkg(std::shared_ptr<graComm::ModbusPkg>(new graComm::ModbusPkg(fs, "ModbusConfig.txt")));
 
   engine1.addLibrary(lib1); /* Add ModbusPkg to the TagEngine */
