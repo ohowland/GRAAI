@@ -7,7 +7,7 @@
 
 */
 
-#include "ModbusServer.hh"
+#include "modbus.hh"
 
 #include <string>
 #include <iostream>

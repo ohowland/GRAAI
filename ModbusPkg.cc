@@ -7,7 +7,7 @@
 	@version 1.0 6/17/17
  */
 
-#include "ModbusPkg.hh"
+#include "modbus.hh"
 #include <iostream>
 #include <algorithm> 
 #include <iomanip>

@@ -16,10 +16,12 @@
 #include <algorithm>
 #include <future>
 
-namespace graComm {
+#include "modbus.hh"
 
-/**
-Constructor */
+namespace graComm {
+	
+/* TAG ENGINE
+   ^^^^^^^^^^ */
 TagEngine::TagEngine(const int updateRate_ms) 
 : libs_(),
   updateLibs_(),
@@ -27,20 +29,21 @@ TagEngine::TagEngine(const int updateRate_ms)
   updateRate_ms_(updateRate_ms)
 { }
 
-TagEngine& TagEngine::addLibrary(std::shared_ptr<ModbusLib> lib) {
+TagEngine& TagEngine::addLibrary(std::shared_ptr<LibraryBase> lib) {
   libs_.push_back(lib);
   print_("lib list updated");
   return *this;
 }
 
-int TagEngine::enqueLib(std::future<std::shared_ptr<ModbusLib> > futureLib) {
-  auto spml = futureLib.get();                          // spml: shared pointer to ModbusLib
-  std::lock_guard<std::mutex> lock(updateLibs_mutex_);  // lock ulibs_
-  updateLibs_.push_back(spml);                          // reinsert ModbusLib 
+int TagEngine::enqueLib(std::future<int> futureLib) {
+  //auto spml = futureLib.get();                          // spml: shared pointer to ModbusLib
+  //std::lock_guard<std::mutex> lock(updateLibs_mutex_);  // lock ulibs_
+  //updateLibs_.push_back(spml);                          // reinsert ModbusLib 
+  std::cout << futureLib.get() << std::endl;
   return 0;
 }
 
-int TagEngine::updateTags(bool* running) {
+int TagEngine::update(bool* running) {
   updateLibs_.clear();
   for(auto& lib : libs_) {
     updateLibs_.push_back(lib); 
@@ -49,15 +52,16 @@ int TagEngine::updateTags(bool* running) {
   while(*running) {
     updateLibs_mutex_.lock();
     for(auto it = updateLibs_.begin(); it != updateLibs_.end(); ++it) {
-      /* package a ModbusLib::updateLibTags task for separate thread execution. */
-      std::packaged_task<std::shared_ptr<ModbusLib>(ModbusLib*, std::shared_ptr<ModbusLib>)> updateLib_task(&ModbusLib::updateLibTags);
-      /* create a future promised a shared_ptr<ModbusLib> that has been updated */
-      std::future<std::shared_ptr<ModbusLib> > updateLib_future = updateLib_task.get_future();
+      // package a ModbusLib::updateLibTags task for separate thread execution.
+      // 
+      std::packaged_task<int(LibraryBase*)> updateLib_task(&LibraryBase::update);
+      // create a future promised a shared_ptr<ModbusLib> that has been updated
+      std::future<int> updateLib_future = updateLib_task.get_future();
 
-      /* Modbuslib::updateLibTags thread: */
+      // Modbuslib::updateLibTags thread:
       std::thread(std::move(updateLib_task), it->get(), *it).detach();
 
-      /* Enque returned shared_ptr<ModbusLib> to the updateLibs list (for continued update) */
+      // Enque returned shared_ptr<ModbusLib> to the updateLibs list (for continued update)
       std::thread(&TagEngine::enqueLib, this, std::move(updateLib_future)).detach();
       
       updateLibs_.pop_front();

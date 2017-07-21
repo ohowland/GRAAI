@@ -1,17 +1,26 @@
 #ifndef GUARD_GRAAI_MODBUS_HH_
 #define GUARD_GRAAI_MODBUS_HH_
 
+#include <list>
 #include <string>
 #include <vector>
+#include <mutex>
+#include <future>
 #include <memory>
 #include <fstream>
 #include <stdint.h> 
+#include <queue>
+#include <modbus.h>
+
+#include "TagEngine.hh"
 
 namespace graComm {
 
 enum requestDataType { U16, U32, FLOAT, DOUBLE };
 enum requestAccessType { R, W, RW };
 
+/* MODBUS TAG CLASS
+   ^^^^^^^^^^^^^^^^ */
 class ModbusTag {
 public:
 	ModbusTag();
@@ -31,6 +40,8 @@ private:
   requestAccessType access_;
 };
 
+/* MODBUS PACKAGE CLASS
+   ^^^^^^^^^^^^^^^^^^^^ */
 class ModbusPkg {
 public:
   typedef std::vector<ModbusTag>::iterator iterator;
@@ -73,7 +84,33 @@ private:
 bool sortByAddress(const ModbusTag&, const ModbusTag&);
 bool sortByAccess(const ModbusTag&, const ModbusTag&);
 
+/* MODBUS SERVER CLASS
+   ^^^^^^^^^^^^^^^^^^^ */
+class ModbusServer {
+public:
+  typedef std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > sDequeHandle;
+  typedef std::weak_ptr<std::deque<std::shared_ptr<ModbusPkg> > > wDequeHandle;
 
+  ModbusServer(const std::string& ip = "127.0.0.1", int port = 1504);
+  
+  std::string ipAddress() const { return ipAddress_; }
+  int port() const { return port_; }
+  wDequeHandle getQueue() { return wDequeHandle(commQueue_); };
+
+  int open();   // Open client connection
+  void close(); // Close client connection
+  int run();    // Process requests from request queue.
+  
+  int read(std::shared_ptr<ModbusPkg>&);
+
+private:
+  modbus_t *ctx_;
+  std::string ipAddress_;  // Device ip address
+  int port_;               // Modbus port default 502
+  sDequeHandle commQueue_; // Update queue handle
+  
+  void print_(const std::string&) const;
+};
 
 }
 #endif
