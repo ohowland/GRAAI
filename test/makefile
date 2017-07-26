@@ -1,5 +1,5 @@
 CXX= g++
-CXXSOURCES= ModbusServer.cc TagEngine.cc ModbusPkg.cc
+CXXSOURCES= ./src/ModbusServer.cc ./src/TagEngine.cc ./src/ModbusPkg.cc
 CXXOBJECTS= $(patsubst %.cc, %.o, $(CXXSOURCES))
 OPTIMFLAGS= -g -O
 PACKAGES= libmodbus 
@@ -9,13 +9,7 @@ CPPFLAGS:=  $(shell $(PKGCONFIG) --cflags $(PACKAGES))
 LIBES:= $(shell $(PKGCONFIG) --libs $(PACKAGES)) -ldl
 .PHONY: all clean
 
-test_ModbusServer: test_ModbusServer.o $(CXXOBJECTS)
-	$(LINK.cc) -rdynamic $^ $(LIBES) -o $@
-
-test_TagEngine: test_TagEngine.o $(CXXOBJECTS)
-	$(LINK.cc) -rdynamic $^ $(LIBES) -o $@
-
-test_ModbusPkg: test_ModbusPkg.o $(CXXOBJECTS)
+GRAAI: GRAAI.o $(CXXOBJECTS)
 	$(LINK.cc) -rdynamic $^ $(LIBES) -o $@
 
 test_server: test_server.o $(CXXOBJECTS)

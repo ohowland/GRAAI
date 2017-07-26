@@ -1,0 +1,7 @@
+// the configured options and settings for GRAAI
+#define GRAAI_VERSION_MAJOR @GRAAI_VERSION_MAJOR@
+#define GRAAI_VERSION_MINOR @GRAAI_VERSION_MINOR@
+#define PROJECT_CONFIG_DIR @PROJECT_CONFIG_DIR@
+
+#include "TagEngine.hh"
+#include "ModbusPlugin.hh"

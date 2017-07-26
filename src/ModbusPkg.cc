@@ -7,10 +7,11 @@
 	@version 1.0 6/17/17
  */
 
-#include "modbus.hh"
+#include "ModbusPlugin.hh"
 #include <iostream>
 #include <algorithm> 
 #include <iomanip>
+#include <memory>
 
 namespace graComm {
 

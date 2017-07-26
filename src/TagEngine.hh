@@ -26,8 +26,8 @@ public:
   
   template<class T, class S> T& addServer(std::shared_ptr<S>);
   template<class T, class P> T& addPkg(std::shared_ptr<P>);
-  virtual int update() = 0; // using a dynamic cast trick to make this work.
-                                 // what are other options?
+  virtual std::shared_ptr<LibraryBase> update(std::shared_ptr<LibraryBase>) = 0; // using a dynamic cast trick to make this work.
+                            // what are other options?
   void whois() const;
 };
 
@@ -39,7 +39,7 @@ public:
 
   Library& addServer(std::shared_ptr<Server>);
   Library& addPkg(std::shared_ptr<Package>);
-  int update();
+  std::shared_ptr<LibraryBase> update(std::shared_ptr<LibraryBase>);
   void print_(const std::string&) const;
 
 private:
@@ -76,7 +76,7 @@ Library<Server, Package>& Library<Server, Package>::addPkg(std::shared_ptr<Packa
 }
 
 template<class Server, class Package>
-int Library<Server, Package>::update() {
+std::shared_ptr<LibraryBase> Library<Server, Package>::update(std::shared_ptr<LibraryBase> splb) {
   std::lock_guard<std::mutex> lock(this->updateMutex_);
   if(auto qh = server_->getQueue().lock()) {
     for (auto pkg : pkgs_) {
@@ -84,7 +84,7 @@ int Library<Server, Package>::update() {
     }
   server_->run(); 
   }
-  return 22;
+  return splb;
 }
 
 template<class Server, class Package>
@@ -94,7 +94,6 @@ void Library<Server, Package>::print_(const std::string& s) const {
   std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
 	    << "Lib: " << s  <<  std::endl;
 }
-
 
 /* TAG ENGINE CLASS
    ^^^^^^^^^^^^^^^^ */
@@ -122,7 +121,7 @@ public:
   
   int update(bool*); // Start the main TagEngine update loop.
   TagEngine& addLibrary(std::shared_ptr<LibraryBase>);      // Add a new Lib to the TagEngine Lib repository.
-  int enqueLib(std::future<int>); // Enque a Lib into the TagEngine update queue.
+  int enqueLib(std::future<std::shared_ptr<LibraryBase> >); // Enque a Lib into the TagEngine update queue.
 
 private:
   std::list<std::shared_ptr<LibraryBase> > libs_;        // Contains Server and Pkgs

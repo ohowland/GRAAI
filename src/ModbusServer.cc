@@ -7,7 +7,7 @@
 
 */
 
-#include "modbus.hh"
+#include "ModbusPlugin.hh"
 
 #include <string>
 #include <iostream>
@@ -65,14 +65,15 @@ int ModbusServer::run() {
 
 int ModbusServer::read(std::shared_ptr<ModbusPkg>& spPkg) {
   int rc = -1; // registers recieved
-  if (spPkg->size()) {  
-    rc = modbus_read_registers(ctx_, spPkg->front().address(), spPkg->size(), spPkg->localDestination());
-  }	
   
-  if (rc == -1)
-    print_(modbus_strerror(errno));
-  else
-    print_("TX Read"); 
+  if (spPkg->size()) {
+    rc = modbus_read_registers(ctx_, spPkg->front().address(), spPkg->size(), spPkg->localDestination());
+    
+    if (rc == -1) {
+      print_(modbus_strerror(errno));
+    } else { print_("TX Read"); } 
+  
+  } else { print_("ModbusPkg empty"); }
   return rc;
 }
 

@@ -1,5 +1,5 @@
-#ifndef GUARD_GRAAI_MODBUS_HH_
-#define GUARD_GRAAI_MODBUS_HH_
+#ifndef GUARD_GRAAI_MODBUSPLUGIN_HH_
+#define GUARD_GRAAI_MODBUSPLUGIN_HH_
 
 #include <list>
 #include <string>
