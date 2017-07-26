@@ -1,12 +1,8 @@
-Class ModbusTag
-- Defines the information for a single modbus register.
+GRAAI
 
-Class ModbusPkg
-- Defines one contigious block.
+In its current state GRAAI is a communications TagEngine. The engine subscribes to policy-driven libraries, meant to provide an interface to implement different communication protocols by defining a "Protocol Server" to handle communication and "Protocol Pkg" to handle the configuration and datastorage. 
 
-Class TagEngine
+Currently only Modicon MODBUS is implemented, see ModbusServer.cc, ModbusPkg.cc, and ModbusPlug.hh.
 
-Class ModbusLib
-
-Class ModbusServer
+Dependencies: libmodbus
 
