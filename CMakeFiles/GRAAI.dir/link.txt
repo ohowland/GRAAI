@@ -1,1 +1,0 @@
-/usr/bin/c++    -std=c++1y -pthread   CMakeFiles/GRAAI.dir/src/GRAAI.cc.o CMakeFiles/GRAAI.dir/src/TagEngine.cc.o CMakeFiles/GRAAI.dir/src/ModbusPkg.cc.o CMakeFiles/GRAAI.dir/src/ModbusServer.cc.o  -o bin/GRAAI -rdynamic -lmodbus 
