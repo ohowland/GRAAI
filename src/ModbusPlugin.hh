@@ -95,7 +95,8 @@ public:
   
   std::string ipAddress() const { return ipAddress_; }
   int port() const { return port_; }
-  wDequeHandle getQueue() { return wDequeHandle(commQueue_); };
+  wDequeHandle getQueue() const { return wDequeHandle(pkgQueue_); };
+  std::mutex& pkgQueueMutex() { return pkgQueueMutex_; };
 
   int open();   // Open client connection
   void close(); // Close client connection
@@ -105,10 +106,10 @@ public:
 
 private:
   modbus_t *ctx_;
-  std::string ipAddress_;  // Device ip address
-  int port_;               // Modbus port default 502
-  sDequeHandle commQueue_; // Update queue handle
-  
+  std::string ipAddress_;     // Device ip address
+  int port_;                  // Modbus port default 502
+  sDequeHandle pkgQueue_;    // Update queue handle
+  std::mutex pkgQueueMutex_; // mutex for update queue handle
   void print_(const std::string&) const;
 };
 

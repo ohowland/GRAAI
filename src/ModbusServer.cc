@@ -1,9 +1,7 @@
-/**
-	ModbusServer.cc
-	Wraps libmodbus.c in a C++
-
-	@author Owen Edgerton
-	@version 1.0 6/17/17
+/** ModbusServer.cc
+  Wraps libmodbus.c in a C++
+  @author Owen Edgerton
+  @version 0.1 6/17/17
 
 */
 
@@ -21,7 +19,7 @@ namespace graComm {
 ModbusServer::ModbusServer(const std::string& ip, int p)
 : ipAddress_(ip),
   port_(p),
-  commQueue_(new std::deque<std::shared_ptr<ModbusPkg> >)
+  pkgQueue_(new std::deque<std::shared_ptr<ModbusPkg> >)
 { 
   /* create libmodbus context */ 
   ctx_ = modbus_new_tcp(ipAddress().c_str(), port());
@@ -56,9 +54,10 @@ void ModbusServer::close() {
 
 /* Run Modbus server consumer loop */
 int ModbusServer::run() {
-  for(auto pkg : *(commQueue_.get())) {
-    read(commQueue_->front());
-    commQueue_->pop_front();
+  std::lock_guard<std::mutex> lock(this->pkgQueueMutex_);
+  for(size_t i = 0; i <= pkgQueue_->size(); ++i) { // pkgQueue: std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > sDequeHandle;
+    read(pkgQueue_->front());
+    pkgQueue_->pop_front();
   }
   return 0;
 }
@@ -71,7 +70,9 @@ int ModbusServer::read(std::shared_ptr<ModbusPkg>& spPkg) {
     
     if (rc == -1) {
       print_(modbus_strerror(errno));
-    } else { print_("TX Read"); } 
+    } else { 
+      print_("Success");
+      std::cout << (spPkg->localDestination())[spPkg->size()] << std::endl;}
   
   } else { print_("ModbusPkg empty"); }
   return rc;

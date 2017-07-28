@@ -34,6 +34,9 @@ TagEngine& TagEngine::addLibrary(std::shared_ptr<LibraryBase> lib) {
   return *this;
 }
 
+/** enqueLib
+  enqueLib waits on a future LibraryBase reference, and enques the Library when it is returned.
+  The work of when a Library package should be re-enqued in the main updateList is done here. */
 int TagEngine::enqueLib(std::future<std::shared_ptr<LibraryBase> > futureLib) {
   auto spml = futureLib.get();                          // spml: shared pointer to ModbusLib
   std::lock_guard<std::mutex> lock(updateLibs_mutex_);  // lock ulibs_
@@ -41,6 +44,11 @@ int TagEngine::enqueLib(std::future<std::shared_ptr<LibraryBase> > futureLib) {
   return 0;
 }
 
+/** TagEngine::update
+  Main update loop in the TagEngine. Any Library reference in the updateLibs_ list will have a packaged_task
+  created for it's update() member function. A future created from the packaged_task will be created as well.
+  The packaged_task spins a daemon thread for update member function. The future is passed to a second daemon thread
+  which calls TagEngine::enqueLib */
 int TagEngine::update(bool* running) {
   updateLibs_.clear();
   for(auto& lib : libs_) {

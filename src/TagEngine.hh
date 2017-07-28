@@ -11,14 +11,8 @@
 
 namespace graComm {
 
-// if If the point of TagEngine is add/remove different Library classes at runtime, then a templated design
-// is probably not the right approach.
-// see https://stackoverflow.com/questions/602593/template-or-abstract-base-class
-// this template type design is called 'policy based'.
-// Policies can be grouped together, which was the original plan for the ModbusLib (gets a server and a pkg).
-
-/* LIBRARY CLASS
-   ^^^^^^^^^^^^^ */
+/** LibraryBase Class
+    Abstract base class for Library. Provides member functions to add a server */
 class LibraryBase {
 public:
   LibraryBase() { };
@@ -26,26 +20,7 @@ public:
   
   template<class T, class S> T& addServer(std::shared_ptr<S>);
   template<class T, class P> T& addPkg(std::shared_ptr<P>);
-  virtual std::shared_ptr<LibraryBase> update(std::shared_ptr<LibraryBase>) = 0; // using a dynamic cast trick to make this work.
-                            // what are other options?
-  void whois() const;
-};
-
-template<class Server, class Package>
-class Library : public LibraryBase {
-public:
-  Library();
-  ~Library() { };
-
-  Library& addServer(std::shared_ptr<Server>);
-  Library& addPkg(std::shared_ptr<Package>);
-  std::shared_ptr<LibraryBase> update(std::shared_ptr<LibraryBase>);
-  void print_(const std::string&) const;
-
-private:
-  std::list<std::shared_ptr<Package> > pkgs_;
-  std::shared_ptr<Server> server_;
-  std::mutex updateMutex_; 
+  virtual std::shared_ptr<LibraryBase> update(std::shared_ptr<LibraryBase>) = 0;
 };
 
 template<class T, class S> 
@@ -54,11 +29,30 @@ T& LibraryBase::addServer(std::shared_ptr<S> server) { return dynamic_cast<T&>(*
 template<class T, class P>
 T& LibraryBase::addPkg(std::shared_ptr<P> package) { return dynamic_cast<T&>(*this).addPkg(package); }
 
+/** Library Class
+    Template class derived from LibraryBase. */
+template<class S, class P>
+class Library : public LibraryBase {
+public:
+  Library();
+  ~Library() { };
+
+  Library& addServer(std::shared_ptr<S>);
+  Library& addPkg(std::shared_ptr<P>);
+  std::shared_ptr<LibraryBase> update(std::shared_ptr<LibraryBase>);
+  void print_(const std::string&) const;
+
+private:
+  std::list<std::shared_ptr<P> > pkgs_;
+  std::shared_ptr<S> server_;
+  std::mutex pkgListMutex_;
+};
+
 template<class Server, class Package>
 Library<Server, Package>::Library()
 : pkgs_(),
   server_(),
-  updateMutex_()
+  pkgListMutex_()
 { };
 
 template<class Server, class Package>
@@ -77,12 +71,13 @@ Library<Server, Package>& Library<Server, Package>::addPkg(std::shared_ptr<Packa
 
 template<class Server, class Package>
 std::shared_ptr<LibraryBase> Library<Server, Package>::update(std::shared_ptr<LibraryBase> splb) {
-  std::lock_guard<std::mutex> lock(this->updateMutex_);
+  std::lock_guard<std::mutex> lock_here(this->pkgListMutex_);
   if(auto qh = server_->getQueue().lock()) {
     for (auto pkg : pkgs_) {
+      std::lock_guard<std::mutex> lock_there(server_->pkgQueueMutex());
       qh->push_back(pkg);
     }
-  server_->run(); 
+  server_->run();
   }
   return splb;
 }
@@ -99,11 +94,6 @@ void Library<Server, Package>::print_(const std::string& s) const {
    ^^^^^^^^^^^^^^^^ */
 class TagEngine {
 /* TagEngine for asyncronous modbus communication */
-
-// shared pointer objects were created to point to a derrived object type.
-// which is causing problems when handing references to functions expecting
-// a shared pointer to parent.
-// It seems like the child object should be created and stored in a shared pointer to parent.
 
 public:
   typedef std::list<std::shared_ptr<LibraryBase> >::iterator iterator;
