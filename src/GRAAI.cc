@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
   signal(SIGINT, stopHandler);
   signal(SIGTERM, stopHandler);
 
-  typedef typename graComm::Library<graComm::ModbusServer, graComm::ModbusPkg> ModbusLibrary;
+  typedef graComm::Library ModbusLibrary;
   typedef std::shared_ptr<graComm::ModbusServer> spModbusServer;
   typedef std::shared_ptr<graComm::ModbusPkg> spModbusPkg;
   

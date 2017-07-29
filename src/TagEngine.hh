@@ -11,6 +11,20 @@
 
 namespace graComm {
 
+class ServerBase {
+public:
+  ServerBase() { };
+  virtual ~ServerBase() { };
+  virtual ServerBase& ServerFactor() = 0;
+};
+
+class PkgBase {
+public:
+  PkgBase() { };
+  virtual ~PkgBase() { };
+  virtual PkgBase& ServerFactor() = 0;
+};
+
 /** LibraryBase Class
     Abstract base class for Library. Provides member functions to add a server */
 class LibraryBase {
@@ -18,43 +32,46 @@ public:
   LibraryBase() { };
   virtual ~LibraryBase() { };
   
-  template<class T, class S> T& addServer(std::shared_ptr<S>);
-  template<class T, class P> T& addPkg(std::shared_ptr<P>);
+  //template<class T, class S> T& addServer(std::shared_ptr<S>);
+  //template<class T, class P> T& addPkg(std::shared_ptr<P>);
+  virtual LibraryBase& addServer(std::shared_ptr<ServerBase>) = 0;
+  virtual LibraryBase& addPkg(std::shared_ptr<PkgBase>) = 0;
   virtual std::shared_ptr<LibraryBase> update(std::shared_ptr<LibraryBase>) = 0;
 };
 
-template<class T, class S> 
-T& LibraryBase::addServer(std::shared_ptr<S> server) { return dynamic_cast<T&>(*this).addServer(server); }
+//template<class T, class S> 
+//T& LibraryBase::addServer(std::shared_ptr<S> server) { return dynamic_cast<T&>(*this).addServer(server); }
 
-template<class T, class P>
-T& LibraryBase::addPkg(std::shared_ptr<P> package) { return dynamic_cast<T&>(*this).addPkg(package); }
+//template<class T, class P>
+//T& LibraryBase::addPkg(std::shared_ptr<P> package) { return dynamic_cast<T&>(*this).addPkg(package); }
 
 /** Library Class
     Template class derived from LibraryBase. */
-template<class S, class P>
+//template<class S, class P>
 class Library : public LibraryBase {
 public:
   Library();
   ~Library() { };
 
-  Library& addServer(std::shared_ptr<S>);
-  Library& addPkg(std::shared_ptr<P>);
+  Library& addServer(std::shared_ptr<ServerBase>);
+  Library& addPkg(std::shared_ptr<PkgBase>);
   std::shared_ptr<LibraryBase> update(std::shared_ptr<LibraryBase>);
   void print_(const std::string&) const;
 
 private:
-  std::list<std::shared_ptr<P> > pkgs_;
-  std::shared_ptr<S> server_;
+  std::list<std::shared_ptr<PkgBase> > pkgs_;
+  std::shared_ptr<ServerBase> server_;
   std::mutex pkgListMutex_;
 };
 
-template<class Server, class Package>
-Library<Server, Package>::Library()
+//template<class Server, class Package>
+//Library<Server, Package>::Library()
 : pkgs_(),
   server_(),
   pkgListMutex_()
 { };
 
+/*
 template<class Server, class Package>
 Library<Server, Package>& Library<Server, Package>::addServer(std::shared_ptr<Server> spMS) {
   server_ = spMS;
@@ -81,7 +98,7 @@ std::shared_ptr<LibraryBase> Library<Server, Package>::update(std::shared_ptr<Li
   }
   return splb;
 }
-
+*/
 template<class Server, class Package>
 void Library<Server, Package>::print_(const std::string& s) const {
   auto t = std::time(nullptr);
