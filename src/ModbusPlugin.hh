@@ -42,7 +42,7 @@ private:
 
 /* MODBUS PACKAGE CLASS
    ^^^^^^^^^^^^^^^^^^^^ */
-class ModbusPkg {
+class ModbusPkg: public PkgBase {
 public:
   typedef std::vector<ModbusTag>::iterator iterator;
   typedef std::vector<ModbusTag>::const_iterator const_iterator;
@@ -86,30 +86,32 @@ bool sortByAccess(const ModbusTag&, const ModbusTag&);
 
 /* MODBUS SERVER CLASS
    ^^^^^^^^^^^^^^^^^^^ */
-class ModbusServer {
+class ModbusServer: public ServerBase {
 public:
   typedef std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > sDequeHandle;
   typedef std::weak_ptr<std::deque<std::shared_ptr<ModbusPkg> > > wDequeHandle;
+  typedef std::shared_ptr<std::deque<std::shared_ptr<PkgBase> > > sDequeHandleP;
+  typedef std::weak_ptr<std::deque<std::shared_ptr<PkgBase> > > wDequeHandleP; 
 
   ModbusServer(const std::string& ip = "127.0.0.1", int port = 1504);
   
-  std::string ipAddress() const { return ipAddress_; }
-  int port() const { return port_; }
-  wDequeHandle getQueue() const { return wDequeHandle(pkgQueue_); };
-  std::mutex& pkgQueueMutex() { return pkgQueueMutex_; };
+  //std::string ipAddress() const { return ipAddress_; }
+  //int port() const { return port_; }
+  wDequeHandleP getQueue() { return wDequeHandleP(pkgQueue_); };
+  std::mutex& queueMutex() { return queueMutex_; };
 
   int open();   // Open client connection
   void close(); // Close client connection
   int run();    // Process requests from request queue.
   
-  int read(std::shared_ptr<ModbusPkg>&);
+  int read(std::shared_ptr<PkgBase>&);
 
 private:
   modbus_t *ctx_;
   std::string ipAddress_;     // Device ip address
   int port_;                  // Modbus port default 502
-  sDequeHandle pkgQueue_;    // Update queue handle
-  std::mutex pkgQueueMutex_; // mutex for update queue handle
+  sDequeHandleP pkgQueue_;    // Update queue handle
+  std::mutex queueMutex_;     // mutex for update queue handle
   void print_(const std::string&) const;
 };
 

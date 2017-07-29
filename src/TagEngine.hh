@@ -11,18 +11,26 @@
 
 namespace graComm {
 
-class ServerBase {
-public:
-  ServerBase() { };
-  virtual ~ServerBase() { };
-  virtual ServerBase& ServerFactor() = 0;
-};
-
 class PkgBase {
 public:
   PkgBase() { };
   virtual ~PkgBase() { };
-  virtual PkgBase& ServerFactor() = 0;
+  
+  //virtual PkgBase& PkgFactory() = 0;
+};
+
+class ServerBase {
+public:
+  typedef std::weak_ptr<std::deque<std::shared_ptr<PkgBase> > > wDequeHandle ;
+
+  ServerBase() { };
+  virtual ~ServerBase() { };
+  
+  //virtual ServerBase& ServerFactor() = 0;
+  
+  virtual int run() = 0;
+  virtual wDequeHandle getQueue() = 0;
+  virtual std::mutex& queueMutex() = 0;
 };
 
 /** LibraryBase Class
@@ -32,22 +40,13 @@ public:
   LibraryBase() { };
   virtual ~LibraryBase() { };
   
-  //template<class T, class S> T& addServer(std::shared_ptr<S>);
-  //template<class T, class P> T& addPkg(std::shared_ptr<P>);
   virtual LibraryBase& addServer(std::shared_ptr<ServerBase>) = 0;
   virtual LibraryBase& addPkg(std::shared_ptr<PkgBase>) = 0;
   virtual std::shared_ptr<LibraryBase> update(std::shared_ptr<LibraryBase>) = 0;
 };
 
-//template<class T, class S> 
-//T& LibraryBase::addServer(std::shared_ptr<S> server) { return dynamic_cast<T&>(*this).addServer(server); }
-
-//template<class T, class P>
-//T& LibraryBase::addPkg(std::shared_ptr<P> package) { return dynamic_cast<T&>(*this).addPkg(package); }
-
 /** Library Class
-    Template class derived from LibraryBase. */
-//template<class S, class P>
+*/
 class Library : public LibraryBase {
 public:
   Library();
@@ -63,49 +62,6 @@ private:
   std::shared_ptr<ServerBase> server_;
   std::mutex pkgListMutex_;
 };
-
-//template<class Server, class Package>
-//Library<Server, Package>::Library()
-: pkgs_(),
-  server_(),
-  pkgListMutex_()
-{ };
-
-/*
-template<class Server, class Package>
-Library<Server, Package>& Library<Server, Package>::addServer(std::shared_ptr<Server> spMS) {
-  server_ = spMS;
-  print_("server updated");
-  return *this;
-}
-
-template<class Server, class Package>
-Library<Server, Package>& Library<Server, Package>::addPkg(std::shared_ptr<Package> pkg) {
-  pkgs_.push_back(pkg);
-  print_("package list updated");
-  return *this;
-}
-
-template<class Server, class Package>
-std::shared_ptr<LibraryBase> Library<Server, Package>::update(std::shared_ptr<LibraryBase> splb) {
-  std::lock_guard<std::mutex> lock_here(this->pkgListMutex_);
-  if(auto qh = server_->getQueue().lock()) {
-    for (auto pkg : pkgs_) {
-      std::lock_guard<std::mutex> lock_there(server_->pkgQueueMutex());
-      qh->push_back(pkg);
-    }
-  server_->run();
-  }
-  return splb;
-}
-*/
-template<class Server, class Package>
-void Library<Server, Package>::print_(const std::string& s) const {
-  auto t = std::time(nullptr);
-  auto tm = *std::localtime(&t); 
-  std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
-	    << "Lib: " << s  <<  std::endl;
-}
 
 /* TAG ENGINE CLASS
    ^^^^^^^^^^^^^^^^ */

@@ -19,10 +19,10 @@ namespace graComm {
 ModbusServer::ModbusServer(const std::string& ip, int p)
 : ipAddress_(ip),
   port_(p),
-  pkgQueue_(new std::deque<std::shared_ptr<ModbusPkg> >)
+  pkgQueue_(new std::deque<std::shared_ptr<PkgBase> >)
 { 
   /* create libmodbus context */ 
-  ctx_ = modbus_new_tcp(ipAddress().c_str(), port());
+  ctx_ = modbus_new_tcp(ipAddress_.c_str(), port_);
   if (ctx_ == NULL) {
     std::cout << "Unable to allocate libmodbus context"
               << std::endl;
@@ -54,25 +54,25 @@ void ModbusServer::close() {
 
 /* Run Modbus server consumer loop */
 int ModbusServer::run() {
-  std::lock_guard<std::mutex> lock(this->pkgQueueMutex_);
-  for(size_t i = 0; i <= pkgQueue_->size(); ++i) { // pkgQueue: std::shared_ptr<std::deque<std::shared_ptr<ModbusPkg> > > sDequeHandle;
+  std::lock_guard<std::mutex> lock(this->queueMutex_);
+  for(size_t i = 0; i <= pkgQueue_->size(); ++i) {
     read(pkgQueue_->front());
     pkgQueue_->pop_front();
   }
   return 0;
 }
 
-int ModbusServer::read(std::shared_ptr<ModbusPkg>& spPkg) {
+int ModbusServer::read(std::shared_ptr<PkgBase>& spPkg) {
+  ModbusPkg* pPkg = static_cast<ModbusPkg*>(spPkg.get());
   int rc = -1; // registers recieved
-  
-  if (spPkg->size()) {
-    rc = modbus_read_registers(ctx_, spPkg->front().address(), spPkg->size(), spPkg->localDestination());
+  if (pPkg->size()) {
+    rc = modbus_read_registers(ctx_, pPkg->front().address(), pPkg->size(), pPkg->localDestination());
     
     if (rc == -1) {
       print_(modbus_strerror(errno));
     } else { 
       print_("Success");
-      std::cout << (spPkg->localDestination())[spPkg->size()] << std::endl;}
+      std::cout << (pPkg->localDestination())[pPkg->size()] << std::endl;}
   
   } else { print_("ModbusPkg empty"); }
   return rc;
@@ -82,7 +82,7 @@ void ModbusServer::print_(const std::string& s) const {
   auto t = std::time(nullptr);
   auto tm = *std::localtime(&t); 
   std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
-	    << "ModbusServer: " << "(" << ipAddress() << ") "
+	    << "ModbusServer: " << "(" << ipAddress_ << ") "
 	    << s  <<  std::endl;
 }
 

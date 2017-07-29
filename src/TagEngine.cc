@@ -18,6 +18,50 @@
 #include "ModbusPlugin.hh"
 
 namespace graComm {
+
+typedef std::shared_ptr<ServerBase> spServer;
+typedef std::shared_ptr<PkgBase> spPkg;
+typedef std::shared_ptr<LibraryBase> spLib;
+
+/* Library
+   ^^^^^^^ */
+Library::Library()
+: pkgs_(),
+  server_(),
+  pkgListMutex_()
+{ };
+
+Library& Library::addServer(spServer server) {
+  server_ = server;
+  print_("server updated");
+  return *this;
+}
+
+Library& Library::addPkg(spPkg pkg) {
+  pkgs_.push_back(pkg);
+  print_("package list updated");
+  return *this;
+}
+
+spLib Library::update(spLib lib) {
+  std::lock_guard<std::mutex> lock_here(this->pkgListMutex_);
+  if(auto qh = server_->getQueue().lock()) {
+    for (auto pkg : pkgs_) {
+      std::lock_guard<std::mutex> lock_there(server_->queueMutex());
+      qh->push_back(pkg);
+    }
+  server_->run();
+  }
+  return lib;
+}
+
+void Library::print_(const std::string& s) const {
+  auto t = std::time(nullptr);
+  auto tm = *std::localtime(&t); 
+  std::cout << "[" << std::put_time(&tm, "%d-%m-%Y %H-%M-%S") << "] " 
+	    << "Lib: " << s  <<  std::endl;
+}
+
 	
 /* TAG ENGINE
    ^^^^^^^^^^ */
