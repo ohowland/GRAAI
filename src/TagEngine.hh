@@ -15,22 +15,16 @@ class PkgBase {
 public:
   PkgBase() { };
   virtual ~PkgBase() { };
-  
-  //virtual PkgBase& PkgFactory() = 0;
 };
 
 class ServerBase {
 public:
-  typedef std::weak_ptr<std::deque<std::shared_ptr<PkgBase> > > wDequeHandle ;
-
   ServerBase() { };
   virtual ~ServerBase() { };
   
-  //virtual ServerBase& ServerFactor() = 0;
-  
   virtual int run() = 0;
-  virtual wDequeHandle getQueue() = 0;
-  virtual std::mutex& queueMutex() = 0;
+  virtual std::weak_ptr<std::deque<std::shared_ptr<PkgBase> > > getQueue() = 0;
+  virtual std::mutex& getQueueMutex() = 0;
 };
 
 /** LibraryBase Class
@@ -60,7 +54,7 @@ public:
 private:
   std::list<std::shared_ptr<PkgBase> > pkgs_;
   std::shared_ptr<ServerBase> server_;
-  std::mutex pkgListMutex_;
+  std::mutex pkgsMutex_;
 };
 
 /* TAG ENGINE CLASS

@@ -70,9 +70,7 @@ int ModbusServer::read(std::shared_ptr<PkgBase>& spPkg) {
     
     if (rc == -1) {
       print_(modbus_strerror(errno));
-    } else { 
-      print_("Success");
-      std::cout << (pPkg->localDestination())[pPkg->size()] << std::endl;}
+    } else { print_("Success"); }
   
   } else { print_("ModbusPkg empty"); }
   return rc;

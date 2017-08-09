@@ -98,7 +98,7 @@ public:
   //std::string ipAddress() const { return ipAddress_; }
   //int port() const { return port_; }
   wDequeHandleP getQueue() { return wDequeHandleP(pkgQueue_); };
-  std::mutex& queueMutex() { return queueMutex_; };
+  std::mutex& getQueueMutex() { return queueMutex_; };
 
   int open();   // Open client connection
   void close(); // Close client connection
